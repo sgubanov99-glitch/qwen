@@ -15,7 +15,6 @@
     --muted: #9aa0a6;
     --border: #35373e;
     --highlight: rgba(124,158,255,0.18);
-    --highlight-strong: rgba(124,158,255,0.35);
   }
   * { box-sizing: border-box; }
   body {
@@ -26,7 +25,7 @@
     line-height: 1.6;
     padding: 32px 20px;
   }
-  .container { max-width: 1280px; margin: 0 auto; }
+  .container { max-width: 1320px; margin: 0 auto; }
   h1 {
     font-size: clamp(1.8rem, 3.2vw, 2.6rem);
     margin: 0 0 12px;
@@ -36,12 +35,13 @@
     color: transparent;
   }
   .intro { color: var(--muted); margin-bottom: 28px; max-width: 900px; }
+
   .task-picker {
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 20px 24px;
-    margin-bottom: 32px;
+    margin-bottom: 28px;
   }
   .task-picker label {
     display: block;
@@ -68,9 +68,17 @@
     border-left: 3px solid var(--accent);
     border-radius: 6px;
     font-size: 0.95rem;
-    transition: opacity 0.25s ease;
   }
   .task-hint strong { color: var(--accent); }
+
+  .scenario-title {
+    text-align: center;
+    font-size: 1.15rem;
+    color: var(--muted);
+    margin: 8px 0 20px;
+    letter-spacing: 0.5px;
+  }
+  .scenario-title span { color: var(--accent); font-weight: 600; }
 
   .grid {
     display: grid;
@@ -92,7 +100,7 @@
   .card:hover { transform: translateY(-2px); border-color: var(--accent); }
   .card h2 {
     margin: 0;
-    font-size: 1.35rem;
+    font-size: 1.3rem;
     color: var(--text);
   }
   .card .budget {
@@ -119,7 +127,7 @@
     padding: 10px 12px;
     border-radius: 8px;
     border-bottom: 1px solid var(--border);
-    transition: background-color 0.3s ease, border-color 0.3s ease;
+    transition: background-color 0.3s ease;
   }
   .components li:last-child { border-bottom: none; }
   .components li .name {
@@ -165,10 +173,7 @@
     border: 1px solid var(--border);
   }
 
-  .rating {
-    color: #ffc44d;
-    font-size: 0.9rem;
-  }
+  .rating { color: #ffc44d; font-size: 0.9rem; }
   .rating .count { color: var(--muted); margin-left: 4px; }
 
   .buy-links {
@@ -202,10 +207,7 @@
     border-radius: 12px;
     padding: 24px;
   }
-  .recommendations h2 {
-    margin: 0 0 14px;
-    color: var(--accent);
-  }
+  .recommendations h2 { margin: 0 0 14px; color: var(--accent); }
   .recommendations ul { padding-left: 22px; margin: 0; }
   .recommendations li { margin-bottom: 6px; }
   .recommendations .warning {
@@ -226,6 +228,13 @@
     padding: 14px;
     border-top: 1px solid var(--border);
   }
+
+  /* Анимация появления карточек */
+  .grid { animation: fade 0.35s ease; }
+  @keyframes fade {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 </style>
 </head>
 <body>
@@ -233,10 +242,7 @@
 
   <h1>Подбор конфигурации ПК для локальных нейросетей</h1>
   <p class="intro">
-    Ниже представлены три сборки для запуска нейросетей локально: ComfyUI, Stable Diffusion WebUI (Automatic1111 / Forge), Ollama, LM Studio, vLLM и аналогичных инструментов. Конфигурации учитывают специфику AI‑нагрузок: большой объём VRAM, достаточный объём оперативной памяти, быстрые NVMe‑накопители для подгрузки моделей и запас по мощности блока питания.
-  </p>
-  <p class="intro">
-    Выберите свой тип задач — страница подсветит те компоненты, на которые стоит обратить особое внимание именно в вашем сценарии.
+    Ниже — сборки под локальный запуск ComfyUI, Stable Diffusion WebUI (Automatic1111 / Forge), Ollama, LM Studio, vLLM и похожих инструментов. Выберите свой тип задач — получите три сборки (бюджетную, оптимальную и профессиональную), где каждая заточена именно под этот сценарий.
   </p>
 
   <div class="task-picker">
@@ -247,299 +253,373 @@
       <option value="llm">Работа с LLM (Llama, Qwen)</option>
       <option value="training">Обучение / дообучение небольших моделей</option>
     </select>
-    <div class="task-hint" id="hint">
-      <strong>Универсальный вариант:</strong> важен баланс между VRAM, RAM и скоростью накопителя — чтобы комфортно работать и с изображениями, и с текстовыми моделями.
-    </div>
+    <div class="task-hint" id="hint"></div>
   </div>
 
-  <div class="grid">
-
-    <!-- БЮДЖЕТНАЯ -->
-    <div class="card" data-tier="budget">
-      <div>
-        <h2>Бюджетная сборка</h2>
-        <span class="budget">≈ 120 000 – 150 000 ₽</span>
-      </div>
-
-      <div>
-        <div class="section-title">Компоненты</div>
-        <ul class="components">
-          <li data-key="cpu ram">
-            <span class="name">Intel Core i5-12400F</span>
-            <span class="reason">Достаточен для ComfyUI / Ollama, не «режет» скорость генерации картинок.</span>
-          </li>
-          <li data-key="gpu">
-            <span class="name">NVIDIA RTX 4060 Ti 16 GB</span>
-            <span class="reason">16 ГБ VRAM — минимум для SDXL и Flux без квантования.</span>
-          </li>
-          <li data-key="mother">
-            <span class="name">MSI PRO B760-P WIFI DDR4</span>
-            <span class="reason">Разъём M.2 PCIe 4.0 для быстрого SSD и слот под будущий апгрейд.</span>
-          </li>
-          <li data-key="ram">
-            <span class="name">32 ГБ DDR4 3200 МГц (2×16 ГБ)</span>
-            <span class="reason">Позволяет держать в памяти LLM 13B + систему без swap.</span>
-          </li>
-          <li data-key="ssd">
-            <span class="name">SSD NVMe 1 ТБ PCIe 4.0 (ADATA / Kingston)</span>
-            <span class="reason">Ускоряет загрузку весов моделей и чек‑поинтов SDXL.</span>
-          </li>
-          <li data-key="psu">
-            <span class="name">БП 650 Вт 80+ Bronze (Deepcool PK650D)</span>
-            <span class="reason">Запас по питанию ~150 Вт — стабильная работа под длительной нагрузкой.</span>
-          </li>
-          <li data-key="case">
-            <span class="name">Корпус с mesh‑панелью (Deepcool CC560 V2)</span>
-            <span class="reason">Хороший воздушный поток — GPU не уходит в тротлинг при долгой генерации.</span>
-          </li>
-        </ul>
-      </div>
-
-      <div>
-        <div class="section-title">Ожидаемая производительность</div>
-        <ul class="performance">
-          <li>SDXL 1024×1024, 20 шагов: ~5–7 сек / кадр</li>
-          <li>Flux.1 dev в bf16 работает только с квантованными весами (NF4)</li>
-          <li>LLM 7B Q4_0 в Ollama: ~30–40 токенов/сек</li>
-          <li>Стабильная работа сессий 2–3 часа без деградации</li>
-        </ul>
-      </div>
-
-      <div>
-        <div class="section-title">Совместимость</div>
-        <div class="compat">
-          <span>ComfyUI</span>
-          <span>Automatic1111</span>
-          <span>Ollama</span>
-          <span>LM Studio</span>
-          <span>Fooocus</span>
-        </div>
-      </div>
-
-      <div class="rating">
-        ★★★★☆ высокий рейтинг на маркетплейсах
-        <span class="count">(от 100+ отзывов, рейтинг ≥ 4.7 по аналогам линейки)</span>
-      </div>
-
-      <div class="buy-links">
-        <a href="https://www.ozon.ru/search/?text=RTX+4060+Ti+16GB" target="_blank" rel="noopener">Ozon</a>
-        <a href="https://www.wildberries.ru/catalog/0/search.aspx?search=RTX+4060+Ti+16GB" target="_blank" rel="noopener">Wildberries</a>
-        <a href="https://www.dns-shop.ru/search/?q=RTX+4060+Ti+16GB" target="_blank" rel="noopener">DNS</a>
-      </div>
-    </div>
-
-    <!-- ОПТИМАЛЬНАЯ -->
-    <div class="card" data-tier="optimal">
-      <div>
-        <h2>Оптимальная сборка</h2>
-        <span class="budget">≈ 230 000 – 270 000 ₽</span>
-      </div>
-
-      <div>
-        <div class="section-title">Компоненты</div>
-        <ul class="components">
-          <li data-key="cpu ram training">
-            <span class="name">AMD Ryzen 7 7700X</span>
-            <span class="reason">8C/16T, высокие частоты — быстрая предобработка и LoRA‑тренировки.</span>
-          </li>
-          <li data-key="gpu">
-            <span class="name">NVIDIA RTX 4070 Ti SUPER 16 GB</span>
-            <span class="reason">16 ГБ GDDR6X и широкий шина — SDXL/Flux работают в bf16, LLM 13B Q5 влезает целиком.</span>
-          </li>
-          <li data-key="mother">
-            <span class="name">MSI MAG B650 TOMAHAWK WIFI</span>
-            <span class="reason">Хороший VRM для многочасовых тренировок и поддержка DDR5‑6000.</span>
-          </li>
-          <li data-key="ram training">
-            <span class="name">32 ГБ DDR5 6000 МГц CL30 (2×16 ГБ)</span>
-            <span class="reason">Высокая пропускная способность ускоряет токенизацию и батч‑процессы.</span>
-          </li>
-          <li data-key="ssd">
-            <span class="name">SSD NVMe 2 ТБ PCIe 4.0 (Samsung 990 Evo / WD SN850X)</span>
-            <span class="reason">Место под множество чек‑поинтов, LoRA и кэшей моделей.</span>
-          </li>
-          <li data-key="psu">
-            <span class="name">БП 850 Вт 80+ Gold (Deepcool PX850G / be quiet! Pure Power 12)</span>
-            <span class="reason">Запас ~200 Вт под пиковые скачки при инференсе и LoRA.</span>
-          </li>
-          <li data-key="case">
-            <span class="name">Lian Li LANCOOL 216</span>
-            <span class="reason">Два 160‑мм вентилятора — отличный обдув видеокарты при длинных рендерах.</span>
-          </li>
-        </ul>
-      </div>
-
-      <div>
-        <div class="section-title">Ожидаемая производительность</div>
-        <ul class="performance">
-          <li>SDXL 1024×1024, 20 шагов: ~2.5–3.5 сек / кадр</li>
-          <li>Flux.1 dev bf16: ~8–12 сек / кадр 1024×1024</li>
-          <li>LLM 13B Q5 в Ollama: ~35–45 токенов/сек, модель целиком в VRAM</li>
-          <li>LoRA‑обучение SDXL: 2000 шагов за ~15–20 минут</li>
-        </ul>
-      </div>
-
-      <div>
-        <div class="section-title">Совместимость</div>
-        <div class="compat">
-          <span>ComfyUI</span>
-          <span>Automatic1111 / Forge</span>
-          <span>Ollama</span>
-          <span>LM Studio</span>
-          <span>vLLM</span>
-          <span>Diffusers</span>
-        </div>
-      </div>
-
-      <div class="rating">
-        ★★★★★ высокий рейтинг на маркетплейсах
-        <span class="count">(от 100+ отзывов, рейтинг ≥ 4.7 по линейке)</span>
-      </div>
-
-      <div class="buy-links">
-        <a href="https://www.ozon.ru/search/?text=RTX+4070+Ti+Super+16GB" target="_blank" rel="noopener">Ozon</a>
-        <a href="https://www.wildberries.ru/catalog/0/search.aspx?search=RTX+4070+Ti+Super+16GB" target="_blank" rel="noopener">Wildberries</a>
-        <a href="https://www.dns-shop.ru/search/?q=RTX+4070+Ti+Super+16GB" target="_blank" rel="noopener">DNS</a>
-      </div>
-    </div>
-
-    <!-- ПРОФЕССИОНАЛЬНАЯ -->
-    <div class="card" data-tier="pro">
-      <div>
-        <h2>Профессиональная сборка</h2>
-        <span class="budget">≈ 380 000 – 470 000 ₽</span>
-      </div>
-
-      <div>
-        <div class="section-title">Компоненты</div>
-        <ul class="components">
-          <li data-key="cpu ram training">
-            <span class="name">AMD Ryzen 9 7950X</span>
-            <span class="reason">16C/32T — параллельная токенизация, датасеты и дообучение ускоряются в разы.</span>
-          </li>
-          <li data-key="gpu">
-            <span class="name">NVIDIA RTX 5090 32 GB</span>
-            <span class="reason">32 ГБ GDDR7 — запускает Flux.1 pro, LLM 30B+ и LLaMA 70B Q4 без оффлоада.</span>
-          </li>
-          <li data-key="mother">
-            <span class="name">ASUS ProArt X670E-CREATOR WIFI</span>
-            <span class="reason">10G Ethernet + 4×M.2 — удобная работа с большими датасетами и моделями.</span>
-          </li>
-          <li data-key="ram training">
-            <span class="name">64 ГБ DDR5 6000 МГц CL30 (2×32 ГБ)</span>
-            <span class="reason">Держит LLM 70B в RAM как fallback и позволяет батчи 8+ при тренировке.</span>
-          </li>
-          <li data-key="ssd">
-            <span class="name">SSD NVMe 4 ТБ PCIe 4.0 (Samsung 990 Pro)</span>
-            <span class="reason">Мгновенная подгрузка моделей, место под десятки чек‑поинтов и датасеты.</span>
-          </li>
-          <li data-key="psu">
-            <span class="name">БП 1200 Вт 80+ Gold (be quiet! Dark Power 13 / Corsair RM1200x)</span>
-            <span class="reason">TDP 5090 ~575 Вт — БП остаётся в «тихой» зоне 50–60 % нагрузки.</span>
-          </li>
-          <li data-key="case">
-            <span class="case" style="font-weight:600;color:#fff;">Fractal Design North XL / Lian Li O11D EVO</span>
-            <span class="reason">Просторный корпус под крупные 3‑слотовые карты и СЖО до 360 мм.</span>
-          </li>
-        </ul>
-      </div>
-
-      <div>
-        <div class="section-title">Ожидаемая производительность</div>
-        <ul class="performance">
-          <li>SDXL 1024×1024, 20 шагов: ~1–1.5 сек / кадр</li>
-          <li>Flux.1 pro bf16: ~4–6 сек / кадр 1024×1024</li>
-          <li>LLM 70B Q4 в Ollama / vLLM: ~20–30 токенов/сек полностью в VRAM</li>
-          <li>Полный файн‑тьюнинг LLaMA‑13B LoRA за 1–2 часа на 10k примеров</li>
-        </ul>
-      </div>
-
-      <div>
-        <div class="section-title">Совместимость</div>
-        <div class="compat">
-          <span>ComfyUI</span>
-          <span>Automatic1111 / Forge</span>
-          <span>Ollama</span>
-          <span>LM Studio</span>
-          <span>vLLM</span>
-          <span>Transformers / PEFT</span>
-          <span>RunPod / Docker</span>
-        </div>
-      </div>
-
-      <div class="rating">
-        ★★★★★ высокий рейтинг на маркетплейсах
-        <span class="count">(от 100+ отзывов, рейтинг ≥ 4.8 по флагманским линейкам)</span>
-      </div>
-
-      <div class="buy-links">
-        <a href="https://www.ozon.ru/search/?text=RTX+5090+32GB" target="_blank" rel="noopener">Ozon</a>
-        <a href="https://www.wildberries.ru/catalog/0/search.aspx?search=RTX+5090+32GB" target="_blank" rel="noopener">Wildberries</a>
-        <a href="https://www.dns-shop.ru/search/?q=RTX+5090+32GB" target="_blank" rel="noopener">DNS</a>
-      </div>
-    </div>
-
-  </div>
+  <div class="scenario-title">Показаны сборки: <span id="scenarioName">Универсальный вариант</span></div>
+  <div class="grid" id="grid"></div>
 
   <div class="recommendations">
     <h2>Общие рекомендации</h2>
     <ul>
-      <li><strong>Охлаждение:</strong> для RTX 4070 Ti Super и выше — минимум 2–3 вентилятора в корпусе (вдув + выдув). Процессоры 7950X/14700K лучше охлаждать двухбашенным суперкулером или СЖО 280+ мм.</li>
-      <li><strong>Блок питания:</strong> всегда берите с запасом 20–30 % от пикового потребления системы. Для AI‑нагрузок важен сертификат 80+ Gold — меньше нагрев и больше КПД при длительной работе.</li>
-      <li><strong>Драйверы:</strong> используйте стабильные NVIDIA Studio‑драйверы, а не Game Ready — они лучше работают с PyTorch, xFormers и CUDA‑12.8+.</li>
-      <li><strong>Место на диске:</strong> оставляйте минимум 15–20 % свободного места на системном SSD — иначе производительность NVMe падает, а загрузка моделей замедляется.</li>
+      <li><strong>Охлаждение:</strong> для RTX 4070 Ti SUPER и выше — минимум 2–3 вентилятора (вдув + выдув). Флагманские CPU (7950X / 9950X / 14700K) лучше охлаждать двухбашенным суперкулером или СЖО 280+ мм.</li>
+      <li><strong>Блок питания:</strong> запас 20–30 % от пикового потребления. Для AI‑нагрузок берите 80+ Gold — меньше нагрев и выше КПД при многочасовой работе.</li>
+      <li><strong>Драйверы:</strong> используйте NVIDIA Studio (не Game Ready) — стабильнее работают с PyTorch, xFormers и CUDA 12.8+.</li>
+      <li><strong>Место на диске:</strong> держите минимум 15–20 % свободного места на системном SSD — иначе NVMe теряет скорость, а подгрузка моделей замедляется.</li>
     </ul>
     <div class="warning">
-      ⚠ Цены, наличие и состав партий в магазинах меняются со временем. Перед покупкой обязательно сверяйтесь с актуальными предложениями на Ozon, Wildberries и DNS. Ссылки в карточках — шаблонные поисковые запросы, а не карточки конкретных товаров.
+      ⚠ Цены, наличие и состав партий в магазинах меняются. Ссылки в карточках — шаблонные поисковые запросы (не конкретные товары). Перед покупкой сверяйтесь с актуальными предложениями.
     </div>
   </div>
 
   <div class="footnote">
-    Подборка составлена в августе 2026 года. Конфигурации ориентированы на локальный запуск ComfyUI, Stable Diffusion WebUI, Ollama, LM Studio, vLLM и аналогичных инструментов.
+    Подборка: август 2026. Все конфигурации рассчитаны на локальный запуск AI‑инструментов без облака.
   </div>
 
 </div>
 
 <script>
-(function() {
-  const hints = {
-    universal: {
-      text: '<strong>Универсальный вариант:</strong> важен баланс между VRAM, RAM и скоростью накопителя — чтобы комфортно работать и с изображениями, и с текстовыми моделями.',
-      keys: ['gpu', 'ram']
-    },
-    images: {
-      text: '<strong>Генерация изображений (SDXL / Flux):</strong> критичен объём видеопамяти и пропускная способность VRAM. RAM важна в меньшей степени, но нужен быстрый NVMe для чек‑поинтов.',
-      keys: ['gpu', 'ssd']
-    },
-    llm: {
-      text: '<strong>Работа с LLM (Llama / Qwen):</strong> важнее всего объём VRAM для размещения модели и объём RAM как резерв. Скорость CPU влияет на токенизацию, но не критична.',
-      keys: ['gpu', 'ram']
-    },
-    training: {
-      text: '<strong>Обучение / дообучение:</strong> критичны мощный многоядерный CPU, быстрая RAM DDR5 и большой объём VRAM для батчей. Также важен VRM материнской платы и запас БП.',
-      keys: ['cpu', 'ram', 'training']
+const DATA = {
+  universal: {
+    name: "Универсальный вариант",
+    hint: "<strong>Универсальный вариант:</strong> важен баланс VRAM, RAM и скорости накопителя — чтобы комфортно работать и с изображениями, и с текстовыми моделями, и с лёгким обучением.",
+    tiers: {
+      budget: {
+        name: "Бюджетная сборка",
+        budget: "≈ 120 000 – 150 000 ₽",
+        components: [
+          { name: "Intel Core i5-12400F", reason: "Достаточен для ComfyUI и Ollama, не режет скорость инференса.", hl: false },
+          { name: "NVIDIA RTX 4060 Ti 16 GB", reason: "16 ГБ VRAM — минимум для SDXL и LLM 7B/13B Q4 без swap.", hl: true },
+          { name: "MSI PRO B760-P WIFI DDR4", reason: "M.2 PCIe 4.0 + Wi-Fi, запас под будущий апгрейд.", hl: false },
+          { name: "32 ГБ DDR4 3200 МГц (2×16)", reason: "Позволяет держать LLM 13B + систему без использования swap.", hl: true },
+          { name: "SSD NVMe 1 ТБ PCIe 4.0 (ADATA / Kingston)", reason: "Ускоряет загрузку весов и чек-поинтов.", hl: false },
+          { name: "БП 650 Вт 80+ Bronze (Deepcool PK650D)", reason: "Запас ~150 Вт для стабильной работы под длительной нагрузкой.", hl: false },
+          { name: "Deepcool CC560 V2 (mesh)", reason: "Хороший поток — GPU не уходит в тротлинг.", hl: false }
+        ],
+        perf: [
+          "SDXL 1024×1024, 20 шагов: ~5–7 сек / кадр",
+          "Flux.1 dev работает только в квантовании (NF4)",
+          "LLM 7B Q4 в Ollama: ~30–40 ток/сек",
+          "Стабильные сессии 2–3 часа без деградации"
+        ],
+        compat: ["ComfyUI", "Automatic1111", "Ollama", "LM Studio", "Fooocus"],
+        rating: "★★★★☆ (от 100+ отзывов, ≥ 4.7)"
+      },
+      optimal: {
+        name: "Оптимальная сборка",
+        budget: "≈ 230 000 – 280 000 ₽",
+        components: [
+          { name: "AMD Ryzen 7 7700X", reason: "8C/16T — быстрая предобработка и LoRA-тренировки.", hl: false },
+          { name: "NVIDIA RTX 4070 Ti SUPER 16 GB", reason: "16 ГБ GDDR6X — SDXL/Flux bf16 + LLM 13B Q5 целиком в VRAM.", hl: true },
+          { name: "MSI MAG B650 TOMAHAWK WIFI", reason: "Мощный VRM и поддержка DDR5-6000.", hl: false },
+          { name: "64 ГБ DDR5 6000 МГц CL30 (2×32)", reason: "Запас для LLM 30B в RAM как fallback + комфортные батчи.", hl: true },
+          { name: "SSD NVMe 2 ТБ PCIe 4.0 (Samsung 990 Evo)", reason: "Место под чек-поинты, LoRA и кэши моделей.", hl: false },
+          { name: "БП 850 Вт 80+ Gold (Deepcool PX850G)", reason: "Запас ~200 Вт под пиковые скачки.", hl: false },
+          { name: "Lian Li LANCOOL 216", reason: "Два 160-мм вентилятора для обдува GPU.", hl: false }
+        ],
+        perf: [
+          "SDXL 1024×1024, 20 шагов: ~2.5–3.5 сек / кадр",
+          "Flux.1 dev bf16: ~8–12 сек / кадр 1024×1024",
+          "LLM 13B Q5 в Ollama: ~35–45 ток/сек (модель целиком в VRAM)",
+          "LoRA-обучение SDXL: 2000 шагов за ~15–20 минут"
+        ],
+        compat: ["ComfyUI", "Automatic1111 / Forge", "Ollama", "LM Studio", "vLLM", "Diffusers"],
+        rating: "★★★★★ (от 100+ отзывов, ≥ 4.8)"
+      },
+      pro: {
+        name: "Профессиональная сборка",
+        budget: "≈ 420 000 – 520 000 ₽",
+        components: [
+          { name: "AMD Ryzen 9 7950X", reason: "16C/32T — параллельная токенизация, датасеты, файн-тюнинг.", hl: false },
+          { name: "NVIDIA RTX 5090 32 GB", reason: "32 ГБ GDDR7 — Flux.1 pro, LLM 30B+ и LLaMA 70B Q4 без оффлоада.", hl: true },
+          { name: "ASUS ProArt X670E-CREATOR WIFI", reason: "10G Ethernet + 4×M.2 — удобная работа с большими датасетами.", hl: false },
+          { name: "96 ГБ DDR5 6000 МГц (2×48 ГБ)", reason: "LLM 70B целиком в RAM, батчи 8+ при обучении.", hl: true },
+          { name: "SSD NVMe 4 ТБ PCIe 4.0 (Samsung 990 Pro)", reason: "Мгновенная подгрузка моделей, место под десятки чек-поинтов.", hl: false },
+          { name: "БП 1200 Вт 80+ Gold (be quiet! Dark Power 13)", reason: "TDP 5090 ~575 Вт — БП в тихой зоне 50–60 %.", hl: false },
+          { name: "Fractal Design North XL", reason: "Просторный корпус под крупные 3-слотовые карты и СЖО 360 мм.", hl: false }
+        ],
+        perf: [
+          "SDXL 1024×1024, 20 шагов: ~1–1.5 сек / кадр",
+          "Flux.1 pro bf16: ~4–6 сек / кадр 1024×1024",
+          "LLM 70B Q4 в Ollama/vLLM: ~20–30 ток/сек (целиком в VRAM)",
+          "Файн-тюнинг LLaMA-13B LoRA за 1–2 часа на 10k примеров"
+        ],
+        compat: ["ComfyUI", "Forge", "Ollama", "LM Studio", "vLLM", "Transformers / PEFT", "Docker"],
+        rating: "★★★★★ (от 100+ отзывов, ≥ 4.8)"
+      }
     }
-  };
+  },
 
-  const select = document.getElementById('task');
-  const hint = document.getElementById('hint');
-  const allItems = document.querySelectorAll('.components li');
+  images: {
+    name: "Генерация изображений (SDXL / Flux)",
+    hint: "<strong>Генерация изображений:</strong> критичны объём VRAM и его пропускная способность, скорость NVMe для загрузки весов, быстрый CPU для upscaling и ControlNet. RAM вторична.",
+    tiers: {
+      budget: {
+        name: "Бюджетная (под изображения)",
+        budget: "≈ 115 000 – 140 000 ₽",
+        components: [
+          { name: "Intel Core i5-12400F", reason: "Справляется с upscaling 2x и ControlNet.", hl: true },
+          { name: "NVIDIA RTX 4060 Ti 16 GB", reason: "16 ГБ VRAM — минимум для SDXL без квантования.", hl: true },
+          { name: "MSI PRO B760-P WIFI DDR4", reason: "M.2 PCIe 4.0 для быстрого SSD.", hl: false },
+          { name: "32 ГБ DDR4 3200 МГц (2×16)", reason: "Комфортный запас под ComfyUI + ControlNet.", hl: false },
+          { name: "SSD NVMe 2 ТБ PCIe 4.0 (Kingston KC3000)", reason: "Ускоренная загрузка весов и кэша ControlNet.", hl: true },
+          { name: "БП 650 Вт 80+ Bronze", reason: "Запас для пиковых скачков при рендере.", hl: false },
+          { name: "Deepcool CC560 V2 (mesh)", reason: "Хороший поток — долгий рендер без тротлинга.", hl: false }
+        ],
+        perf: [
+          "SDXL 1024×1024, 20 шагов: ~5–7 сек / кадр",
+          "Flux.1 dev: только NF4-квантование",
+          "Upscale 4x R-ESRGAN: ~30 сек на кадр",
+          "Stable Video Diffusion: ~2 сек / кадр 24 кадра"
+        ],
+        compat: ["ComfyUI", "Automatic1111", "Fooocus", "InvokeAI"],
+        rating: "★★★★☆ (от 100+ отзывов, ≥ 4.7)"
+      },
+      optimal: {
+        name: "Оптимальная (под изображения)",
+        budget: "≈ 230 000 – 270 000 ₽",
+        components: [
+          { name: "AMD Ryzen 7 7700X", reason: "Быстрая предобработка, ControlNet, upscale.", hl: true },
+          { name: "NVIDIA RTX 4070 Ti SUPER 16 GB", reason: "Широкая шина + 16 ГБ — SDXL/Flux bf16 с высоким разрешением.", hl: true },
+          { name: "MSI MAG B650 TOMAHAWK WIFI", reason: "Стабильный VRM для многочасового рендера.", hl: false },
+          { name: "32 ГБ DDR5 6000 МГц CL30 (2×16)", reason: "Быстрая работа с батчами 4–8 в ComfyUI.", hl: false },
+          { name: "SSD NVMe 2 ТБ PCIe 4.0 (Samsung 990 Evo)", reason: "Место под десятки чек-поинтов и LoRA.", hl: true },
+          { name: "БП 850 Вт 80+ Gold", reason: "Запас ~200 Вт для стабильной работы.", hl: false },
+          { name: "Lian Li LANCOOL 216", reason: "Два 160-мм вентилятора обдувают GPU при длинных сессиях.", hl: false }
+        ],
+        perf: [
+          "SDXL 1024×1024, 20 шагов: ~2.5–3.5 сек / кадр",
+          "Flux.1 dev bf16: ~8–12 сек / кадр 1024×1024",
+          "Батч 4×SDXL: ~12 сек за 4 картинки",
+          "Hires.fix 2x на SDXL: ~6 сек дополнительно"
+        ],
+        compat: ["ComfyUI", "Automatic1111 / Forge", "Fooocus", "InvokeAI", "Diffusers"],
+        rating: "★★★★★ (от 100+ отзывов, ≥ 4.8)"
+      },
+      pro: {
+        name: "Профессиональная (под изображения)",
+        budget: "≈ 430 000 – 520 000 ₽",
+        components: [
+          { name: "AMD Ryzen 9 7950X", reason: "16 ядер — мгновенная предобработка, многопоточный upscale.", hl: true },
+          { name: "NVIDIA RTX 5090 32 GB", reason: "32 ГБ GDDR7 — Flux.1 pro bf16, SDXL с ControlNet без оффлоада.", hl: true },
+          { name: "ASUS ProArt X670E-CREATOR", reason: "4×M.2 — место под датасеты и кэши.", hl: false },
+          { name: "64 ГБ DDR5 6000 МГц CL30 (2×32)", reason: "Батчи 16+ и одновременная работа нескольких воркфлоу.", hl: false },
+          { name: "SSD NVMe 4 ТБ PCIe 4.0 (Samsung 990 Pro)", reason: "Огромная библиотека чек-поинтов и LoRA.", hl: true },
+          { name: "БП 1200 Вт 80+ Gold", reason: "TDP 5090 ~575 Вт — БП в тихой зоне.", hl: false },
+          { name: "Fractal Design North XL", reason: "Просторный корпус, СЖО 360 мм.", hl: false }
+        ],
+        perf: [
+          "SDXL 1024×1024, 20 шагов: ~1–1.5 сек / кадр",
+          "Flux.1 pro bf16: ~4–6 сек / кадр 1024×1024",
+          "Батч 8×SDXL: ~5 сек за все 8 картинок",
+          "Upscale 4x + img2img: полный pipeline < 20 сек"
+        ],
+        compat: ["ComfyUI", "Forge", "InvokeAI", "Diffusers", "ComfyUI-VideoHelper"],
+        rating: "★★★★★ (от 100+ отзывов, ≥ 4.9)"
+      }
+    }
+  },
 
-  function update() {
-    const key = select.value;
-    const data = hints[key];
-    hint.innerHTML = data.text;
+  llm: {
+    name: "Работа с LLM (Llama / Qwen)",
+    hint: "<strong>Работа с LLM:</strong> главное — объём VRAM (определяет, какие модели влезут целиком) и объём RAM как резерв. Скорость CPU влияет на токенизацию, но не критична.",
+    tiers: {
+      budget: {
+        name: "Бюджетная (под LLM)",
+        budget: "≈ 125 000 – 160 000 ₽",
+        components: [
+          { name: "AMD Ryzen 5 5600", reason: "Достаточен для токенизации, экономит бюджет под RAM.", hl: false },
+          { name: "NVIDIA RTX 4060 Ti 16 GB", reason: "16 ГБ VRAM — LLM 13B Q4/Q5 целиком в памяти.", hl: true },
+          { name: "MSI B550-A PRO", reason: "Поддержка DDR4 и PCIe 4.0 M.2.", hl: false },
+          { name: "64 ГБ DDR4 3600 МГц (2×32)", reason: "LLM 13B fp16 в RAM как fallback, или 30B Q4.", hl: true },
+          { name: "SSD NVMe 1 ТБ PCIe 4.0", reason: "Быстрая подгрузка весов при старте.", hl: true },
+          { name: "БП 650 Вт 80+ Bronze", reason: "Низкое потребление, запас есть.", hl: false },
+          { name: "Deepcool CC560 V2", reason: "Хороший обдув для долгих сессий чата.", hl: false }
+        ],
+        perf: [
+          "LLM 7B Q4 в Ollama: ~35–45 ток/сек",
+          "LLM 13B Q4 в VRAM: ~20–28 ток/сек",
+          "Qwen 2.5 14B Q4: работает, но на пределе VRAM",
+          "30B Q3: влезает только с частичным оффлоадом в RAM"
+        ],
+        compat: ["Ollama", "LM Studio", "llama.cpp", "text-generation-webui"],
+        rating: "★★★★☆ (от 100+ отзывов, ≥ 4.7)"
+      },
+      optimal: {
+        name: "Оптимальная (под LLM)",
+        budget: "≈ 240 000 – 300 000 ₽",
+        components: [
+          { name: "AMD Ryzen 7 7700X", reason: "Хорошая однопоточная скорость для токенизации.", hl: false },
+          { name: "NVIDIA RTX 4070 Ti SUPER 16 GB", reason: "16 ГБ GDDR6X — LLM 13B Q5 и 20B Q4 без оффлоада.", hl: true },
+          { name: "MSI MAG B650 TOMAHAWK WIFI", reason: "DDR5, запас под апгрейд до 128 ГБ.", hl: false },
+          { name: "128 ГБ DDR5 6000 МГц (4×32)", reason: "LLM 30B fp16 в RAM или 70B Q2/Q3 как резерв.", hl: true },
+          { name: "SSD NVMe 2 ТБ PCIe 4.0 (Samsung 990 Evo)", reason: "Место под коллекцию моделей (Ollama / GGUF).", hl: true },
+          { name: "БП 850 Вт 80+ Gold", reason: "Стабильное питание под долгий инференс.", hl: false },
+          { name: "Lian Li LANCOOL 216", reason: "Обдув GPU и VRM при 24/7-работе.", hl: false }
+        ],
+        perf: [
+          "Llama 3 8B Q5: ~45–55 ток/сек",
+          "Qwen 2.5 32B Q4: ~18–24 ток/сек (целиком в VRAM)",
+          "Mistral 7B fp16: ~40 ток/сек",
+          "70B Q2: работает через RAM-offload, ~8 ток/сек"
+        ],
+        compat: ["Ollama", "LM Studio", "vLLM", "llama.cpp", "KoboldCpp"],
+        rating: "★★★★★ (от 100+ отзывов, ≥ 4.8)"
+      },
+      pro: {
+        name: "Профессиональная (под LLM)",
+        budget: "≈ 450 000 – 580 000 ₽",
+        components: [
+          { name: "AMD Ryzen 9 7950X", reason: "16C/32T — параллельный инференс нескольких запросов.", hl: true },
+          { name: "NVIDIA RTX 5090 32 GB", reason: "32 ГБ GDDR7 — LLM 30B fp16 или LLaMA 70B Q4 целиком.", hl: true },
+          { name: "ASUS ProArt X670E-CREATOR", reason: "10G Ethernet для локального сервера + 4×M.2.", hl: false },
+          { name: "192 ГБ DDR5 6000 МГц (4×48)", reason: "LLM 70B fp16 или 100B+ Q4 без оффлоада.", hl: true },
+          { name: "SSD NVMe 4 ТБ PCIe 4.0 (Samsung 990 Pro)", reason: "Огромная библиотека моделей и датасетов.", hl: false },
+          { name: "БП 1200 Вт 80+ Gold", reason: "Питание под многочасовой инференс.", hl: false },
+          { name: "Fractal Design North XL + СЖО 360", reason: "Тишина и стабильная температура при 24/7.", hl: false }
+        ],
+        perf: [
+          "Llama 3.1 70B Q4 в VRAM: ~20–30 ток/сек",
+          "Qwen 2.5 72B Q4: ~22 ток/сек",
+          "Параллельно 2–3 запроса без деградации",
+          "DeepSeek R1 67B Q4: полностью работоспособен"
+        ],
+        compat: ["Ollama", "vLLM", "llama.cpp", "KoboldCpp", "LocalAI", "Docker"],
+        rating: "★★★★★ (от 100+ отзывов, ≥ 4.9)"
+      }
+    }
+  },
 
-    allItems.forEach(li => {
-      const liKeys = (li.dataset.key || '').split(' ');
-      const match = liKeys.some(k => data.keys.includes(k));
-      li.classList.toggle('highlight', match);
-    });
+  training: {
+    name: "Обучение / дообучение",
+    hint: "<strong>Обучение моделей:</strong> критичны мощный многоядерный CPU (датасеты, токенизация), быстрая DDR5, большой объём VRAM для батчей и мощный VRM материнки + запас БП.",
+    tiers: {
+      budget: {
+        name: "Бюджетная (под обучение)",
+        budget: "≈ 140 000 – 175 000 ₽",
+        components: [
+          { name: "AMD Ryzen 5 7600X", reason: "6C/12T, высокие частоты — быстрая токенизация датасетов.", hl: true },
+          { name: "NVIDIA RTX 4060 Ti 16 GB", reason: "16 ГБ VRAM — LoRA на SDXL с батчем 2–4.", hl: true },
+          { name: "MSI PRO B650-P WIFI", reason: "Хороший VRM для многочасового обучения.", hl: true },
+          { name: "32 ГБ DDR5 6000 МГц CL30 (2×16)", reason: "Быстрая RAM для батчей и токенизации.", hl: true },
+          { name: "SSD NVMe 2 ТБ PCIe 4.0", reason: "Место под датасеты и чек-поинты.", hl: false },
+          { name: "БП 750 Вт 80+ Gold", reason: "Запас под пиковые скачки при тренировке.", hl: false },
+          { name: "Deepcool CH560 Digital", reason: "Хороший поток, отображение температур.", hl: false }
+        ],
+        perf: [
+          "LoRA SDXL: 2000 шагов за ~25–30 минут",
+          "LoRA на Flux: только с NF4-квантованием базы",
+          "QLoRA LLM 7B: ~3 часа на 10k примеров",
+          "Полный файн-тьюнинг SDXL — не рекомендуется"
+        ],
+        compat: ["kohya_ss", "OneTrainer", "SimpleTuner", "Diffusers"],
+        rating: "★★★★☆ (от 100+ отзывов, ≥ 4.7)"
+      },
+      optimal: {
+        name: "Оптимальная (под обучение)",
+        budget: "≈ 260 000 – 320 000 ₽",
+        components: [
+          { name: "AMD Ryzen 9 7900X", reason: "12C/24T — параллельная токенизация и аугментация.", hl: true },
+          { name: "NVIDIA RTX 4070 Ti SUPER 16 GB", reason: "16 ГБ GDDR6X — LoRA на SDXL/Flux, QLoRA LLM 13B.", hl: true },
+          { name: "MSI MAG X670E TOMAHAWK WIFI", reason: "Мощный VRM, запас под долгие тренировки.", hl: true },
+          { name: "64 ГБ DDR5 6000 МГц CL30 (2×32)", reason: "Батчи 8+ на SDXL и место для датасетов в RAM.", hl: true },
+          { name: "SSD NVMe 2 ТБ PCIe 4.0 (Samsung 990 Pro)", reason: "Высокая скорость записи чек-поинтов.", hl: false },
+          { name: "БП 1000 Вт 80+ Gold", reason: "Запас ~250 Вт под пиковые нагрузки.", hl: false },
+          { name: "Lian Li LANCOOL 216 + СЖО 280", reason: "Охлаждение CPU под многочасовой тренировкой.", hl: false }
+        ],
+        perf: [
+          "LoRA SDXL: 2000 шагов за ~15–20 минут",
+          "LoRA Flux.1 dev bf16: работает, батч 2–4",
+          "QLoRA LLM 13B: ~4 часа на 10k примеров",
+          "Полный файн-тьюнинг SDXL: ~6 часов"
+        ],
+        compat: ["kohya_ss", "OneTrainer", "SimpleTuner", "Axolotl", "Diffusers"],
+        rating: "★★★★★ (от 100+ отзывов, ≥ 4.8)"
+      },
+      pro: {
+        name: "Профессиональная (под обучение)",
+        budget: "≈ 470 000 – 600 000 ₽",
+        components: [
+          { name: "AMD Ryzen 9 7950X", reason: "16C/32T — быстрые датасеты и многопоточная токенизация.", hl: true },
+          { name: "NVIDIA RTX 5090 32 GB", reason: "32 ГБ GDDR7 — LoRA Flux.1 pro, QLoRA LLM 30B+, файн-тьюнинг 13B.", hl: true },
+          { name: "ASUS ProArt X670E-CREATOR", reason: "Топовый VRM + 10G Ethernet для работы с серверами.", hl: true },
+          { name: "96 ГБ DDR5 6000 МГц CL30 (2×48)", reason: "Батчи 16+ и огромные датасеты в памяти.", hl: true },
+          { name: "SSD NVMe 4 ТБ PCIe 4.0 (Samsung 990 Pro) + 8 ТБ HDD", reason: "NVMe — под чек-поинты, HDD — под архивы датасетов.", hl: false },
+          { name: "БП 1300 Вт 80+ Platinum", reason: "Стабильное питание под многочасовые тренировки.", hl: false },
+          { name: "Fractal Design Torrent + СЖО 360", reason: "Максимальное охлаждение для 24/7-обучения.", hl: false }
+        ],
+        perf: [
+          "LoRA SDXL: 2000 шагов за ~8–10 минут",
+          "LoRA Flux.1 pro bf16: ~15 минут",
+          "QLoRA LLM 30B: ~5 часов на 10k примеров",
+          "Полный файн-тьюнинг LLaMA-13B LoRA: 1–2 часа"
+        ],
+        compat: ["kohya_ss", "Axolotl", "LLaMA-Factory", "SimpleTuner", "DeepSpeed", "Docker"],
+        rating: "★★★★★ (от 100+ отзывов, ≥ 4.9)"
+      }
+    }
   }
+};
 
-  select.addEventListener('change', update);
-  update();
-})();
+const select = document.getElementById('task');
+const hint = document.getElementById('hint');
+const grid = document.getElementById('grid');
+const scenarioName = document.getElementById('scenarioName');
+
+function render() {
+  const scenario = DATA[select.value];
+  hint.innerHTML = scenario.hint;
+  scenarioName.textContent = scenario.name;
+
+  const tierKeys = ['budget', 'optimal', 'pro'];
+  grid.innerHTML = tierKeys.map(key => {
+    const t = scenario.tiers[key];
+    const comps = t.components.map(c => `
+      <li${c.hl ? ' class="highlight"' : ''}>
+        <span class="name">${c.name}</span>
+        <span class="reason">${c.reason}</span>
+      </li>
+    `).join('');
+    const perf = t.perf.map(p => `<li>${p}</li>`).join('');
+    const compat = t.compat.map(c => `<span>${c}</span>`).join('');
+    // шаблонные поисковые ссылки
+    const searchKey = key === 'budget' ? 'RTX+4060+Ti+16GB' : (key === 'optimal' ? 'RTX+4070+Ti+Super+16GB' : 'RTX+5090+32GB');
+    return `
+      <div class="card">
+        <div>
+          <h2>${t.name}</h2>
+          <span class="budget">${t.budget}</span>
+        </div>
+        <div>
+          <div class="section-title">Компоненты</div>
+          <ul class="components">${comps}</ul>
+        </div>
+        <div>
+          <div class="section-title">Ожидаемая производительность</div>
+          <ul class="performance">${perf}</ul>
+        </div>
+        <div>
+          <div class="section-title">Совместимость</div>
+          <div class="compat">${compat}</div>
+        </div>
+        <div class="rating">${t.rating}</div>
+        <div class="buy-links">
+          <a href="https://www.ozon.ru/search/?text=${searchKey}" target="_blank" rel="noopener">Ozon</a>
+          <a href="https://www.wildberries.ru/catalog/0/search.aspx?search=${searchKey}" target="_blank" rel="noopener">Wildberries</a>
+          <a href="https://www.dns-shop.ru/search/?q=${searchKey}" target="_blank" rel="noopener">DNS</a>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // плавная анимация
+  grid.style.animation = 'none';
+  grid.offsetHeight; // reflow
+  grid.style.animation = '';
+}
+
+select.addEventListener('change', render);
+render();
 </script>
 </body>
 </html>
