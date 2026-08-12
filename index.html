@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Умный садовод — веб-версия</title>
+  <title>Умный садовод — исправленная веб-версия</title>
 
   <style>
     * {
@@ -267,6 +267,22 @@
       color: #567;
     }
 
+    /*
+      Важно: скрытая панель не должна перехватывать клики.
+      На десктопе оставляем её видимой как обычную колонку.
+    */
+    .panel:not(.open) {
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    @media (min-width: 1101px) {
+      .panel:not(.open) {
+        visibility: visible;
+        pointer-events: auto;
+      }
+    }
+
     @media (max-width: 1100px) {
       .layout {
         grid-template-columns: 240px minmax(0, 1fr);
@@ -358,10 +374,10 @@
       </select>
     </label>
 
-    <button id="saveBtn">Сохранить</button>
-    <button id="loadBtn">Загрузить</button>
-    <button id="resetBtn">Сброс</button>
-    <button id="generateBtn" class="primary">Календарь</button>
+    <button type="button" id="saveBtn">Сохранить</button>
+    <button type="button" id="loadBtn">Загрузить</button>
+    <button type="button" id="resetBtn">Сброс</button>
+    <button type="button" id="generateBtn" class="primary">Календарь</button>
   </header>
 
   <div class="layout">
@@ -369,11 +385,11 @@
       <h3>Добавить объект</h3>
 
       <div class="palette-buttons">
-        <button class="add-object" data-type="building">Постройка</button>
-        <button class="add-object" data-type="greenhouse">Теплица</button>
-        <button class="add-object" data-type="bed">Грядка</button>
-        <button class="add-object" data-type="tree">Дерево</button>
-        <button class="add-object" data-type="bush">Кустарник</button>
+        <button type="button" class="add-object" data-type="building">Постройка</button>
+        <button type="button" class="add-object" data-type="greenhouse">Теплица</button>
+        <button type="button" class="add-object" data-type="bed">Грядка</button>
+        <button type="button" class="add-object" data-type="tree">Дерево</button>
+        <button type="button" class="add-object" data-type="bush">Кустарник</button>
       </div>
 
       <h3>Список объектов</h3>
@@ -388,7 +404,7 @@
     <aside class="side panel" id="panel">
       <div class="panel-header">
         <h3>Настройки объекта</h3>
-        <button id="closePanelBtn" title="Закрыть">✕</button>
+        <button type="button" id="closePanelBtn" title="Закрыть">✕</button>
       </div>
 
       <div id="propertiesBody">
@@ -400,155 +416,1248 @@
   <dialog id="calendarDialog">
     <div class="panel-header">
       <h3>Календарь работ</h3>
-      <button id="closeCalendarBtn">✕</button>
+      <button type="button" id="closeCalendarBtn">✕</button>
     </div>
 
     <ol id="calendarList"></ol>
   </dialog>
 
   <script>
-    const STORAGE_KEY = 'smart-gardener-web-plan-v1';
+    (function () {
+      'use strict';
 
-    const TYPE_LABELS = {
-      building: 'Постройка',
-      greenhouse: 'Теплица',
-      bed: 'Грядка',
-      tree: 'Дерево',
-      bush: 'Кустарник'
-    };
+      const STORAGE_KEY = 'smart-gardener-web-plan-v1';
 
-    const TYPE_COLORS = {
-      building: '#d7ccc8',
-      greenhouse: '#c8e6c9',
-      bed: '#dcedc8',
-      tree: '#b2dfdb',
-      bush: '#ffe0b2'
-    };
+      const TYPE_LABELS = {
+        building: 'Постройка',
+        greenhouse: 'Теплица',
+        bed: 'Грядка',
+        tree: 'Дерево',
+        bush: 'Кустарник'
+      };
 
-    const CROPS = [
-      'Томат',
-      'Огурец',
-      'Перец',
-      'Салат',
-      'Клубника',
-      'Укроп',
-      'Петрушка',
-      'Лук',
-      'Чеснок',
-      'Морковь',
-      'Редис',
-      'Кабачок',
-      'Тыква'
-    ];
+      const TYPE_COLORS = {
+        building: '#d7ccc8',
+        greenhouse: '#c8e6c9',
+        bed: '#dcedc8',
+        tree: '#b2dfdb',
+        bush: '#ffe0b2'
+      };
 
-    const TREE_CULTURES = [
-      'Яблоня',
-      'Груша',
-      'Слива',
-      'Вишня',
-      'Черешня'
-    ];
+      const CROPS = [
+        'Томат',
+        'Огурец',
+        'Перец',
+        'Салат',
+        'Клубника',
+        'Укроп',
+        'Петрушка',
+        'Лук',
+        'Чеснок',
+        'Морковь',
+        'Редис',
+        'Кабачок',
+        'Тыква'
+      ];
 
-    const BUSH_CULTURES = [
-      'Смородина',
-      'Малина',
-      'Крыжовник',
-      'Ежевика',
-      'Жимолость',
-      'Виноград'
-    ];
+      const TREE_CULTURES = [
+        'Яблоня',
+        'Груша',
+        'Слива',
+        'Вишня',
+        'Черешня'
+      ];
 
-    let state = {
-      plot: {
-        widthM: 12,
-        lengthM: 8,
-        gridStepM: 0.5
-      },
-      objects: []
-    };
+      const BUSH_CULTURES = [
+        'Смородина',
+        'Малина',
+        'Крыжовник',
+        'Ежевика',
+        'Жимолость',
+        'Виноград'
+      ];
 
-    let selectedId = null;
-    let pxPerMeter = 30;
-    let dragContext = null;
-    let saveTimer = null;
+      let state = {
+        plot: {
+          widthM: 12,
+          lengthM: 8,
+          gridStepM: 0.5
+        },
+        objects: []
+      };
 
-    const els = {
-      plotWidth: document.getElementById('plotWidth'),
-      plotLength: document.getElementById('plotLength'),
-      gridStep: document.getElementById('gridStep'),
-      saveBtn: document.getElementById('saveBtn'),
-      loadBtn: document.getElementById('loadBtn'),
-      resetBtn: document.getElementById('resetBtn'),
-      generateBtn: document.getElementById('generateBtn'),
-      canvasWrap: document.getElementById('canvasWrap'),
-      canvas: document.getElementById('canvas'),
-      status: document.getElementById('status'),
-      objectList: document.getElementById('objectList'),
-      panel: document.getElementById('panel'),
-      closePanelBtn: document.getElementById('closePanelBtn'),
-      propertiesBody: document.getElementById('propertiesBody'),
-      calendarDialog: document.getElementById('calendarDialog'),
-      closeCalendarBtn: document.getElementById('closeCalendarBtn'),
-      calendarList: document.getElementById('calendarList')
-    };
+      let els = null;
+      let selectedId = null;
+      let pxPerMeter = 30;
+      let dragContext = null;
+      let saveTimer = null;
 
-    init();
+      function ready(callback) {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', callback);
+        } else {
+          callback();
+        }
+      }
 
-    function init() {
-      loadPlan();
-      syncPlotInputs();
-      bindEvents();
-      renderAll();
-    }
+      ready(initApp);
 
-    function bindEvents() {
-      els.plotWidth.addEventListener('change', () => {
-        state.plot.widthM = clamp(Number(els.plotWidth.value) || 12, 1, 500);
-        clampAllObjects();
-        renderAll();
-        scheduleSave();
-      });
+      function initApp() {
+        els = {
+          plotWidth: document.getElementById('plotWidth'),
+          plotLength: document.getElementById('plotLength'),
+          gridStep: document.getElementById('gridStep'),
+          saveBtn: document.getElementById('saveBtn'),
+          loadBtn: document.getElementById('loadBtn'),
+          resetBtn: document.getElementById('resetBtn'),
+          generateBtn: document.getElementById('generateBtn'),
+          canvasWrap: document.getElementById('canvasWrap'),
+          canvas: document.getElementById('canvas'),
+          status: document.getElementById('status'),
+          objectList: document.getElementById('objectList'),
+          panel: document.getElementById('panel'),
+          closePanelBtn: document.getElementById('closePanelBtn'),
+          propertiesBody: document.getElementById('propertiesBody'),
+          calendarDialog: document.getElementById('calendarDialog'),
+          closeCalendarBtn: document.getElementById('closeCalendarBtn'),
+          calendarList: document.getElementById('calendarList')
+        };
 
-      els.plotLength.addEventListener('change', () => {
-        state.plot.lengthM = clamp(Number(els.plotLength.value) || 8, 1, 500);
-        clampAllObjects();
-        renderAll();
-        scheduleSave();
-      });
+        const missing = Object.entries(els)
+          .filter(([key, value]) => !value)
+          .map(([key]) => key);
 
-      els.gridStep.addEventListener('change', () => {
-        state.plot.gridStepM = Number(els.gridStep.value) || 0.5;
-        renderAll();
-        scheduleSave();
-      });
+        if (missing.length) {
+          console.error('Умный садовод: не найдены элементы с id:', missing.join(', '));
+          return;
+        }
 
-      document.querySelectorAll('.add-object').forEach(button => {
-        button.addEventListener('click', () => {
-          createObject(button.dataset.type);
-        });
-      });
-
-      els.saveBtn.addEventListener('click', () => {
-        savePlan();
-        showTemporaryStatus('План сохранён');
-      });
-
-      els.loadBtn.addEventListener('click', () => {
         loadPlan();
         syncPlotInputs();
+        bindEvents();
         renderAll();
-        showTemporaryStatus('План загружен из localStorage');
-      });
 
-      els.resetBtn.addEventListener('click', () => {
-        if (!confirm('Очистить текущий план?')) return;
+        console.info('Умный садовод: интерфейс успешно инициализирован.');
+      }
 
-        state.objects = [];
-        selectedId = null;
+      function bindEvents() {
+        on(els.plotWidth, 'change', () => {
+          state.plot.widthM = clamp(Number(els.plotWidth.value) || 12, 1, 500);
+          clampAllObjects();
+          renderAll();
+          scheduleSave();
+        });
+
+        on(els.plotLength, 'change', () => {
+          state.plot.lengthM = clamp(Number(els.plotLength.value) || 8, 1, 500);
+          clampAllObjects();
+          renderAll();
+          scheduleSave();
+        });
+
+        on(els.gridStep, 'change', () => {
+          state.plot.gridStepM = Number(els.gridStep.value) || 0.5;
+          renderAll();
+          scheduleSave();
+        });
+
+        document.querySelectorAll('.add-object').forEach(button => {
+          on(button, 'click', () => {
+            createObject(button.dataset.type);
+          });
+        });
+
+        on(els.saveBtn, 'click', () => {
+          savePlan();
+          showTemporaryStatus('План сохранён');
+        });
+
+        on(els.loadBtn, 'click', () => {
+          loadPlan();
+          syncPlotInputs();
+          renderAll();
+          showTemporaryStatus('План загружен из localStorage');
+        });
+
+        on(els.resetBtn, 'click', () => {
+          if (!confirm('Очистить текущий план?')) return;
+
+          state.objects = [];
+          selectedId = null;
+
+          renderAll();
+          savePlan();
+        });
+
+        on(els.generateBtn, 'click', generateAndShowCalendar);
+
+        on(els.closePanelBtn, 'click', () => {
+          selectedId = null;
+          renderAll();
+        });
+
+        on(els.closeCalendarBtn, 'click', () => {
+          if (els.calendarDialog && typeof els.calendarDialog.close === 'function') {
+            els.calendarDialog.close();
+          }
+        });
+
+        on(els.canvas, 'pointerdown', (event) => {
+          if (event.target === els.canvas) {
+            selectedId = null;
+            renderProperties();
+            renderObjectList();
+            updateSelectionClasses();
+          }
+        });
+
+        window.addEventListener('resize', () => {
+          renderCanvas();
+        });
+      }
+
+      function createObject(type) {
+        if (!TYPE_LABELS[type]) {
+          console.warn('Неизвестный тип объекта:', type);
+          return;
+        }
+
+        const defaults = {
+          building: { w: 3, l: 4 },
+          greenhouse: { w: 3, l: 6 },
+          bed: { w: 1, l: 3 },
+          tree: { w: 2, l: 2 },
+          bush: { w: 1, l: 1 }
+        };
+
+        const count = state.objects.filter(o => o.type === type).length + 1;
+
+        const obj = {
+          id: makeId(),
+          type,
+          name: `${TYPE_LABELS[type]} ${count}`,
+          xM: 0,
+          yM: 0,
+          widthM: Math.min(defaults[type].w, state.plot.widthM),
+          lengthM: Math.min(defaults[type].l, state.plot.lengthM),
+          rotation: 0
+        };
+
+        if (type === 'bed') {
+          obj.culture = null;
+          obj.plantingDate = null;
+        }
+
+        if (type === 'tree' || type === 'bush') {
+          obj.culture = null;
+        }
+
+        if (type === 'greenhouse') {
+          obj.greenhouseBedCount = 2;
+          obj.greenhouseBedCultures = [null, null];
+          obj.greenhouseBedPlantingDates = [null, null];
+        }
+
+        findFreeSpot(obj);
+
+        state.objects.push(obj);
+        selectedId = obj.id;
+
         renderAll();
-        savePlan();
-      });
+        scheduleSave();
+      }
 
-      els.generateBtn.addEventListener('click', generateAndShowCalendar);
+      function findFreeSpot(obj) {
+        const searchStep = Math.max(state.plot.gridStepM, 0.5);
 
-      els.closePanelBtn.addEventListener('click', () => {
+        const maxX = Math.max(0, state.plot.widthM - obj.widthM);
+        const maxY = Math.max(0, state.plot.lengthM - obj.lengthM);
+
+        for (let y = 0; y <= maxY + 0.001; y += searchStep) {
+          for (let x = 0; x <= maxX + 0.001; x += searchStep) {
+            obj.xM = Number(x.toFixed(2));
+            obj.yM = Number(y.toFixed(2));
+
+            if (isPlacementValid(obj)) {
+              return;
+            }
+          }
+        }
+
+        obj.xM = 0;
+        obj.yM = 0;
+      }
+
+      function renderAll() {
+        syncPlotInputs();
+        renderCanvas();
+        renderObjectList();
+        renderProperties();
+      }
+
+      function syncPlotInputs() {
+        if (!els) return;
+
+        els.plotWidth.value = state.plot.widthM;
+        els.plotLength.value = state.plot.lengthM;
+        els.gridStep.value = String(state.plot.gridStepM);
+      }
+
+      function renderCanvas() {
+        if (!els || !els.canvasWrap || !els.canvas) return;
+
+        const availableWidth = Math.max(80, els.canvasWrap.clientWidth - 32);
+        const availableHeight = Math.max(80, els.canvasWrap.clientHeight - 32);
+
+        pxPerMeter = Math.max(
+          12,
+          Math.min(
+            availableWidth / state.plot.widthM,
+            availableHeight / state.plot.lengthM
+          )
+        );
+
+        const widthPx = state.plot.widthM * pxPerMeter;
+        const heightPx = state.plot.lengthM * pxPerMeter;
+
+        els.canvas.style.width = `${widthPx}px`;
+        els.canvas.style.height = `${heightPx}px`;
+
+        const gridPx = state.plot.gridStepM * pxPerMeter;
+        els.canvas.style.backgroundSize = `${gridPx}px ${gridPx}px`;
+
+        els.canvas.innerHTML = '';
+
+        for (const obj of state.objects) {
+          els.canvas.appendChild(createObjectElement(obj));
+        }
+      }
+
+      function createObjectElement(obj) {
+        const el = document.createElement('div');
+
+        el.className = 'object';
+        el.dataset.id = obj.id;
+
+        if (obj.id === selectedId) {
+          el.classList.add('selected');
+        }
+
+        if (!isPlacementValid(obj)) {
+          el.classList.add('invalid');
+        }
+
+        el.style.left = `${obj.xM * pxPerMeter}px`;
+        el.style.top = `${obj.yM * pxPerMeter}px`;
+        el.style.width = `${obj.widthM * pxPerMeter}px`;
+        el.style.height = `${obj.lengthM * pxPerMeter}px`;
+        el.style.background = TYPE_COLORS[obj.type] || '#eee';
+
+        const cultureText = getObjectCultureSummary(obj);
+        el.title = `${obj.name}${cultureText ? ` • ${cultureText}` : ''}`;
+        el.textContent = obj.name;
+
+        el.addEventListener('pointerdown', (event) => {
+          event.stopPropagation();
+          selectObject(obj.id);
+          startDrag(event, obj.id);
+        });
+
+        return el;
+      }
+
+      function getObjectCultureSummary(obj) {
+        if (obj.type === 'greenhouse') {
+          return `грядок: ${obj.greenhouseBedCount || 0}`;
+        }
+
+        return obj.culture || '';
+      }
+
+      function renderObjectList() {
+        if (!els || !els.objectList) return;
+
+        els.objectList.innerHTML = '';
+
+        if (!state.objects.length) {
+          els.objectList.innerHTML = '<div class="muted">Нет объектов</div>';
+          return;
+        }
+
+        for (const obj of state.objects) {
+          const button = document.createElement('button');
+          button.type = 'button';
+
+          button.className = 'list-item';
+
+          if (obj.id === selectedId) {
+            button.classList.add('selected');
+          }
+
+          const summary = getObjectCultureSummary(obj);
+
+          button.textContent =
+            `${obj.name} • ${obj.widthM.toFixed(1)}×${obj.lengthM.toFixed(1)} м` +
+            (summary ? ` • ${summary}` : '');
+
+          button.addEventListener('click', () => {
+            selectObject(obj.id);
+          });
+
+          els.objectList.appendChild(button);
+        }
+      }
+
+      function selectObject(id) {
+        selectedId = id;
+
+        renderObjectList();
+        renderProperties();
+        updateSelectionClasses();
+      }
+
+      function updateSelectionClasses() {
+        if (!els || !els.canvas) return;
+
+        els.canvas.querySelectorAll('.object').forEach(el => {
+          el.classList.toggle('selected', el.dataset.id === selectedId);
+        });
+      }
+
+      function renderProperties() {
+        if (!els || !els.panel || !els.propertiesBody) return;
+
+        const obj = selectedObject();
+
+        if (!obj) {
+          els.panel.classList.remove('open');
+          els.propertiesBody.innerHTML = 'Выберите объект на схеме или в списке.';
+          return;
+        }
+
+        els.panel.classList.add('open');
+
+        let specific = '';
+
+        if (obj.type === 'greenhouse') {
+          const bedCount = clampInt(obj.greenhouseBedCount || 1, 1, 4);
+
+          specific += `
+            <div class="prop-field">
+              <label>Количество грядок</label>
+              <select id="prop-bed-count">
+                ${[1, 2, 3, 4].map(value => `
+                  <option value="${value}" ${value === bedCount ? 'selected' : ''}>
+                    ${value}
+                  </option>
+                `).join('')}
+              </select>
+            </div>
+          `;
+
+          for (let i = 0; i < bedCount; i++) {
+            const culture = obj.greenhouseBedCultures?.[i] || '';
+            const date = obj.greenhouseBedPlantingDates?.[i] || '';
+
+            specific += `
+              <fieldset class="bed-box">
+                <legend>Грядка ${i + 1}</legend>
+
+                <div class="prop-field">
+                  <label>Культура</label>
+                  <select class="gh-bed-culture" data-index="${i}">
+                    ${cultureOptions(culture, CROPS)}
+                  </select>
+                </div>
+
+                <div class="prop-field">
+                  <label>Дата посадки</label>
+                  <input
+                    type="date"
+                    class="gh-bed-date"
+                    data-index="${i}"
+                    value="${escapeHtml(date)}"
+                  />
+                </div>
+              </fieldset>
+            `;
+          }
+        }
+
+        if (obj.type === 'bed') {
+          specific += `
+            <div class="prop-field">
+              <label>Культура</label>
+              <select id="prop-culture">
+                ${cultureOptions(obj.culture, CROPS)}
+              </select>
+            </div>
+
+            <div class="prop-field">
+              <label>Дата посадки</label>
+              <input
+                id="prop-planting-date"
+                type="date"
+                value="${escapeHtml(obj.plantingDate || '')}"
+              />
+            </div>
+          `;
+        }
+
+        if (obj.type === 'tree' || obj.type === 'bush') {
+          const cultures = obj.type === 'tree' ? TREE_CULTURES : BUSH_CULTURES;
+
+          specific += `
+            <div class="prop-field">
+              <label>Культура</label>
+              <select id="prop-culture">
+                ${cultureOptions(obj.culture, cultures)}
+              </select>
+            </div>
+          `;
+        }
+
+        els.propertiesBody.innerHTML = `
+          <div class="prop-type">${TYPE_LABELS[obj.type]}</div>
+
+          <div class="prop-field">
+            <label>Название</label>
+            <input id="prop-name" type="text" value="${escapeHtml(obj.name)}" />
+          </div>
+
+          <div class="prop-grid">
+            <div class="prop-field">
+              <label>X, м</label>
+              <input id="prop-x" type="number" step="${state.plot.gridStepM}" value="${obj.xM.toFixed(2)}" />
+            </div>
+
+            <div class="prop-field">
+              <label>Y, м</label>
+              <input id="prop-y" type="number" step="${state.plot.gridStepM}" value="${obj.yM.toFixed(2)}" />
+            </div>
+
+            <div class="prop-field">
+              <label>Ширина, м</label>
+              <input id="prop-width" type="number" min="0.3" step="0.1" value="${obj.widthM.toFixed(2)}" />
+            </div>
+
+            <div class="prop-field">
+              <label>Длина, м</label>
+              <input id="prop-length" type="number" min="0.3" step="0.1" value="${obj.lengthM.toFixed(2)}" />
+            </div>
+          </div>
+
+          ${specific}
+
+          <button type="button" id="prop-delete" class="btn-danger">Удалить объект</button>
+        `;
+
+        bindPropertyEvents(obj);
+      }
+
+      function bindPropertyEvents(obj) {
+        const root = els.propertiesBody;
+
+        const nameEl = root.querySelector('#prop-name');
+        const xEl = root.querySelector('#prop-x');
+        const yEl = root.querySelector('#prop-y');
+        const widthEl = root.querySelector('#prop-width');
+        const lengthEl = root.querySelector('#prop-length');
+        const deleteEl = root.querySelector('#prop-delete');
+        const cultureEl = root.querySelector('#prop-culture');
+        const plantingDateEl = root.querySelector('#prop-planting-date');
+        const bedCountEl = root.querySelector('#prop-bed-count');
+
+        on(nameEl, 'input', () => {
+          obj.name = nameEl.value;
+          renderCanvas();
+          renderObjectList();
+          scheduleSave();
+        });
+
+        on(xEl, 'change', () => {
+          obj.xM = clamp(
+            snapValue(Number(xEl.value) || 0, state.plot.gridStepM),
+            0,
+            Math.max(0, state.plot.widthM - obj.widthM)
+          );
+
+          renderCanvas();
+          validateObjectStatus(obj);
+          scheduleSave();
+        });
+
+        on(yEl, 'change', () => {
+          obj.yM = clamp(
+            snapValue(Number(yEl.value) || 0, state.plot.gridStepM),
+            0,
+            Math.max(0, state.plot.lengthM - obj.lengthM)
+          );
+
+          renderCanvas();
+          validateObjectStatus(obj);
+          scheduleSave();
+        });
+
+        on(widthEl, 'change', () => {
+          obj.widthM = clamp(Number(widthEl.value) || 0.5, 0.3, state.plot.widthM);
+          obj.xM = clamp(obj.xM, 0, Math.max(0, state.plot.widthM - obj.widthM));
+
+          renderCanvas();
+          validateObjectStatus(obj);
+          scheduleSave();
+        });
+
+        on(lengthEl, 'change', () => {
+          obj.lengthM = clamp(Number(lengthEl.value) || 0.5, 0.3, state.plot.lengthM);
+          obj.yM = clamp(obj.yM, 0, Math.max(0, state.plot.lengthM - obj.lengthM));
+
+          renderCanvas();
+          validateObjectStatus(obj);
+          scheduleSave();
+        });
+
+        on(deleteEl, 'click', () => {
+          state.objects = state.objects.filter(o => o.id !== obj.id);
+          selectedId = null;
+
+          renderAll();
+          scheduleSave();
+        });
+
+        on(cultureEl, 'change', () => {
+          obj.culture = cultureEl.value || null;
+          renderObjectList();
+          scheduleSave();
+        });
+
+        on(plantingDateEl, 'change', () => {
+          obj.plantingDate = plantingDateEl.value || null;
+          scheduleSave();
+        });
+
+        on(bedCountEl, 'change', () => {
+          setGreenhouseBedCount(obj.id, Number(bedCountEl.value));
+          renderProperties();
+          renderCanvas();
+          renderObjectList();
+          scheduleSave();
+        });
+
+        root.querySelectorAll('.gh-bed-culture').forEach(select => {
+          on(select, 'change', () => {
+            const index = Number(select.dataset.index);
+
+            if (!Array.isArray(obj.greenhouseBedCultures)) {
+              obj.greenhouseBedCultures = [];
+            }
+
+            obj.greenhouseBedCultures[index] = select.value || null;
+            scheduleSave();
+          });
+        });
+
+        root.querySelectorAll('.gh-bed-date').forEach(input => {
+          on(input, 'change', () => {
+            const index = Number(input.dataset.index);
+
+            if (!Array.isArray(obj.greenhouseBedPlantingDates)) {
+              obj.greenhouseBedPlantingDates = [];
+            }
+
+            obj.greenhouseBedPlantingDates[index] = input.value || null;
+            scheduleSave();
+          });
+        });
+      }
+
+      function setGreenhouseBedCount(id, count) {
+        const obj = state.objects.find(o => o.id === id);
+
+        if (!obj || obj.type !== 'greenhouse') return;
+
+        const safeCount = clampInt(count, 1, 4);
+
+        const cultures = Array.isArray(obj.greenhouseBedCultures)
+          ? [...obj.greenhouseBedCultures]
+          : [];
+
+        const dates = Array.isArray(obj.greenhouseBedPlantingDates)
+          ? [...obj.greenhouseBedPlantingDates]
+          : [];
+
+        while (cultures.length < safeCount) {
+          cultures.push(null);
+          dates.push(null);
+        }
+
+        if (cultures.length > safeCount) {
+          cultures.length = safeCount;
+          dates.length = safeCount;
+        }
+
+        obj.greenhouseBedCount = safeCount;
+        obj.greenhouseBedCultures = cultures;
+        obj.greenhouseBedPlantingDates = dates;
+      }
+
+      function startDrag(event, id) {
+        const obj = state.objects.find(o => o.id === id);
+
+        if (!obj) return;
+
+        dragContext = {
+          id,
+          startX: event.clientX,
+          startY: event.clientY,
+          originX: obj.xM,
+          originY: obj.yM,
+          lastValidX: obj.xM,
+          lastValidY: obj.yM
+        };
+
+        document.addEventListener('pointermove', onDragMove);
+        document.addEventListener('pointerup', onDragEnd);
+        document.addEventListener('pointercancel', onDragEnd);
+
+        event.preventDefault();
+      }
+
+      function onDragMove(event) {
+        if (!dragContext) return;
+
+        const obj = state.objects.find(o => o.id === dragContext.id);
+
+        if (!obj) return;
+
+        const dx = (event.clientX - dragContext.startX) / pxPerMeter;
+        const dy = (event.clientY - dragContext.startY) / pxPerMeter;
+
+        let x = dragContext.originX + dx;
+        let y = dragContext.originY + dy;
+
+        x = snapValue(x, state.plot.gridStepM);
+        y = snapValue(y, state.plot.gridStepM);
+
+        x = clamp(x, 0, Math.max(0, state.plot.widthM - obj.widthM));
+        y = clamp(y, 0, Math.max(0, state.plot.lengthM - obj.lengthM));
+
+        obj.xM = x;
+        obj.yM = y;
+
+        const valid = isPlacementValid(obj);
+
+        if (valid) {
+          dragContext.lastValidX = x;
+          dragContext.lastValidY = y;
+          setStatus('');
+        } else {
+          setStatus('Пересечение или выход за границы участка');
+        }
+
+        updateObjectElement(obj, valid);
+        scheduleSave();
+      }
+
+      function onDragEnd() {
+        if (!dragContext) return;
+
+        const obj = state.objects.find(o => o.id === dragContext.id);
+
+        if (obj && !isPlacementValid(obj)) {
+          obj.xM = dragContext.lastValidX;
+          obj.yM = dragContext.lastValidY;
+
+          renderCanvas();
+          showTemporaryStatus('Позиция возвращена из-за пересечения или границы');
+        } else {
+          setStatus('');
+        }
+
+        dragContext = null;
+
+        document.removeEventListener('pointermove', onDragMove);
+        document.removeEventListener('pointerup', onDragEnd);
+        document.removeEventListener('pointercancel', onDragEnd);
+
+        renderObjectList();
+        renderProperties();
+        scheduleSave();
+      }
+
+      function updateObjectElement(obj, valid) {
+        const el = getObjectEl(obj.id);
+
+        if (!el) return;
+
+        el.style.left = `${obj.xM * pxPerMeter}px`;
+        el.style.top = `${obj.yM * pxPerMeter}px`;
+        el.style.width = `${obj.widthM * pxPerMeter}px`;
+        el.style.height = `${obj.lengthM * pxPerMeter}px`;
+
+        el.classList.toggle('invalid', !valid);
+      }
+
+      function validateObjectStatus(obj) {
+        const valid = isPlacementValid(obj);
+
+        if (!valid) {
+          setStatus('Объект пересекается или выходит за границы участка');
+        } else {
+          setStatus('');
+        }
+
+        const el = getObjectEl(obj.id);
+
+        if (el) {
+          el.classList.toggle('invalid', !valid);
+        }
+
+        return valid;
+      }
+
+      function isPlacementValid(obj) {
+        const eps = 0.001;
+
+        const insidePlot =
+          obj.xM >= -eps &&
+          obj.yM >= -eps &&
+          obj.xM + obj.widthM <= state.plot.widthM + eps &&
+          obj.yM + obj.lengthM <= state.plot.lengthM + eps;
+
+        if (!insidePlot) return false;
+
+        const hasCollision = state.objects.some(other => {
+          if (other.id === obj.id) return false;
+
+          return rectsIntersect(getObjectRect(obj), getObjectRect(other));
+        });
+
+        return !hasCollision;
+      }
+
+      function getObjectRect(obj) {
+        return {
+          x: obj.xM,
+          y: obj.yM,
+          w: obj.widthM,
+          h: obj.lengthM
+        };
+      }
+
+      function rectsIntersect(a, b) {
+        return (
+          a.x < b.x + b.w &&
+          a.x + a.w > b.x &&
+          a.y < b.y + b.h &&
+          a.y + a.h > b.y
+        );
+      }
+
+      function generateAndShowCalendar() {
+        const result = generateCalendar();
+
+        if (result.errors.length) {
+          alert(result.errors.join('\n'));
+          setStatus('Схема содержит ошибки');
+          return;
+        }
+
+        if (!result.tasks.length) {
+          els.calendarList.innerHTML = '<li>Нет будущих задач.</li>';
+        } else {
+          els.calendarList.innerHTML = result.tasks.map(task => `
+            <li>
+              <strong>${formatDateRu(task.date)}</strong> — ${escapeHtml(task.title)}
+              <br />
+              <small>
+                ${escapeHtml(task.objectName)} • ${escapeHtml(task.culture)} •
+                ${task.mandatory ? 'обязательно' : 'рекомендуется'}
+              </small>
+            </li>
+          `).join('');
+        }
+
+        if (els.calendarDialog && typeof els.calendarDialog.showModal === 'function') {
+          els.calendarDialog.showModal();
+        } else {
+          alert('Календарь сформирован, но диалоговое окно недоступно в этом браузере.');
+        }
+      }
+
+      function generateCalendar() {
+        const errors = [];
+        const tasks = [];
+        const today = toDateStr(new Date());
+
+        const hasPlants = state.objects.some(o => o.type !== 'building');
+
+        if (!hasPlants) {
+          errors.push('Добавьте хотя бы одно растение: грядку, теплицу, дерево или кустарник.');
+        }
+
+        for (const obj of state.objects) {
+          if (obj.type === 'building') continue;
+
+          if (obj.type === 'greenhouse') {
+            const count = clampInt(obj.greenhouseBedCount || 0, 0, 4);
+
+            if (count <= 0) {
+              errors.push(`${obj.name}: укажите количество грядок в теплице.`);
+              continue;
+            }
+
+            for (let i = 0; i < count; i++) {
+              const culture = obj.greenhouseBedCultures?.[i];
+
+              if (!culture) {
+                errors.push(`${obj.name}, грядка ${i + 1}: выберите культуру.`);
+                continue;
+              }
+
+              const baseDate = obj.greenhouseBedPlantingDates?.[i] || today;
+
+              addCropTasks(
+                tasks,
+                baseDate,
+                culture,
+                `${obj.name}, грядка ${i + 1}`
+              );
+            }
+
+            continue;
+          }
+
+          if (obj.type === 'bed') {
+            if (!obj.culture) {
+              errors.push(`${obj.name}: выберите культуру.`);
+              continue;
+            }
+
+            addCropTasks(
+              tasks,
+              obj.plantingDate || today,
+              obj.culture,
+              obj.name
+            );
+
+            continue;
+          }
+
+          if (!obj.culture) {
+            errors.push(`${obj.name}: выберите культуру.`);
+            continue;
+          }
+
+          addPerennialTasks(tasks, obj.culture, obj.name);
+        }
+
+        const filteredTasks = tasks
+          .filter(task => task.date >= today)
+          .sort((a, b) => a.date.localeCompare(b.date));
+
+        return {
+          tasks: filteredTasks,
+          errors
+        };
+      }
+
+      function addCropTasks(tasks, baseIso, culture, objectName) {
+        const base = baseIso || toDateStr(new Date());
+
+        tasks.push({
+          date: base,
+          title: `Посадка/посев: ${culture}`,
+          objectName,
+          culture,
+          mandatory: true
+        });
+
+        const wateringDays = [3, 6, 9, 12, 15, 18, 21, 24, 27, 30];
+
+        for (const day of wateringDays) {
+          tasks.push({
+            date: addDays(base, day),
+            title: `Полив: ${culture}`,
+            objectName,
+            culture,
+            mandatory: true
+          });
+        }
+
+        tasks.push({
+          date: addDays(base, 14),
+          title: `Подкормка: ${culture}`,
+          objectName,
+          culture,
+          mandatory: false
+        });
+
+        tasks.push({
+          date: addDays(base, 21),
+          title: `Проверка на вредителей: ${culture}`,
+          objectName,
+          culture,
+          mandatory: false
+        });
+
+        tasks.push({
+          date: addDays(base, 70),
+          title: `Сбор урожая: ${culture}`,
+          objectName,
+          culture,
+          mandatory: true
+        });
+      }
+
+      function addPerennialTasks(tasks, culture, objectName) {
+        const today = new Date();
+        const base = toDateStr(today);
+
+        tasks.push({
+          date: addDays(base, 2),
+          title: `Полив после посадки: ${culture}`,
+          objectName,
+          culture,
+          mandatory: false
+        });
+
+        tasks.push({
+          date: addDays(base, 10),
+          title: `Обработка от вредителей: ${culture}`,
+          objectName,
+          culture,
+          mandatory: true
+        });
+
+        const spring = new Date(today.getFullYear(), 2, 15);
+
+        if (today > spring) {
+          spring.setFullYear(spring.getFullYear() + 1);
+        }
+
+        const year = spring.getFullYear();
+
+        tasks.push({
+          date: `${year}-03-15`,
+          title: `Весенняя обрезка: ${culture}`,
+          objectName,
+          culture,
+          mandatory: false
+        });
+
+        tasks.push({
+          date: `${year}-04-01`,
+          title: `Весенняя подкормка: ${culture}`,
+          objectName,
+          culture,
+          mandatory: false
+        });
+
+        tasks.push({
+          date: `${year}-04-20`,
+          title: `Обработка перед цветением: ${culture}`,
+          objectName,
+          culture,
+          mandatory: true
+        });
+      }
+
+      function savePlan() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (error) {
+          console.warn('Не удалось сохранить план в localStorage', error);
+          showTemporaryStatus('Не удалось сохранить план. Возможно, браузер блокирует localStorage.');
+        }
+      }
+
+      function loadPlan() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+
+          if (!raw) return;
+
+          const parsed = JSON.parse(raw);
+
+          if (parsed && parsed.plot && Array.isArray(parsed.objects)) {
+            state = parsed;
+            selectedId = null;
+            normalizeState();
+          }
+        } catch (error) {
+          console.warn('Не удалось загрузить план', error);
+        }
+      }
+
+      function normalizeState() {
+        state.plot.widthM = clamp(Number(state.plot.widthM) || 12, 1, 500);
+        state.plot.lengthM = clamp(Number(state.plot.lengthM) || 8, 1, 500);
+        state.plot.gridStepM = Number(state.plot.gridStepM) || 0.5;
+
+        if (!Array.isArray(state.objects)) {
+          state.objects = [];
+        }
+
+        state.objects = state.objects.filter(obj => obj && TYPE_LABELS[obj.type]);
+
+        state.objects.forEach((obj, index) => {
+          if (!obj.id) {
+            obj.id = makeId();
+          }
+
+          obj.name = obj.name || `${TYPE_LABELS[obj.type]} ${index + 1}`;
+          obj.widthM = clamp(Number(obj.widthM) || 1, 0.3, state.plot.widthM);
+          obj.lengthM = clamp(Number(obj.lengthM) || 1, 0.3, state.plot.lengthM);
+          obj.xM = clamp(Number(obj.xM) || 0, 0, Math.max(0, state.plot.widthM - obj.widthM));
+          obj.yM = clamp(Number(obj.yM) || 0, 0, Math.max(0, state.plot.lengthM - obj.lengthM));
+
+          if (obj.type === 'greenhouse') {
+            obj.greenhouseBedCount = clampInt(Number(obj.greenhouseBedCount) || 1, 1, 4);
+
+            obj.greenhouseBedCultures = Array.from(
+              { length: obj.greenhouseBedCount },
+              (_, i) => obj.greenhouseBedCultures?.[i] ?? null
+            );
+
+            obj.greenhouseBedPlantingDates = Array.from(
+              { length: obj.greenhouseBedCount },
+              (_, i) => obj.greenhouseBedPlantingDates?.[i] ?? null
+            );
+          }
+
+          if (obj.type === 'bed') {
+            obj.culture = obj.culture || null;
+            obj.plantingDate = obj.plantingDate || null;
+          }
+
+          if (obj.type === 'tree' || obj.type === 'bush') {
+            obj.culture = obj.culture || null;
+          }
+        });
+
+        clampAllObjects();
+      }
+
+      function scheduleSave() {
+        clearTimeout(saveTimer);
+
+        saveTimer = setTimeout(() => {
+          savePlan();
+        }, 300);
+      }
+
+      function clampAllObjects() {
+        state.objects.forEach(obj => {
+          obj.widthM = clamp(obj.widthM, 0.3, state.plot.widthM);
+          obj.lengthM = clamp(obj.lengthM, 0.3, state.plot.lengthM);
+          obj.xM = clamp(obj.xM, 0, Math.max(0, state.plot.widthM - obj.widthM));
+          obj.yM = clamp(obj.yM, 0, Math.max(0, state.plot.lengthM - obj.lengthM));
+        });
+      }
+
+      function selectedObject() {
+        return state.objects.find(o => o.id === selectedId) || null;
+      }
+
+      function getObjectEl(id) {
+        if (!els || !els.canvas) return null;
+
+        return els.canvas.querySelector(`.object[data-id="${id}"]`);
+      }
+
+      function cultureOptions(selected, list) {
+        const options = ['<option value="">— не выбрана —</option>'];
+
+        for (const item of list) {
+          const selectedAttr = item === selected ? 'selected' : '';
+          options.push(`<option value="${escapeHtml(item)}" ${selectedAttr}>${escapeHtml(item)}</option>`);
+        }
+
+        return options.join('');
+      }
+
+      function makeId() {
+        if (window.crypto && crypto.randomUUID) {
+          return crypto.randomUUID();
+        }
+
+        return `id_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+      }
+
+      function clamp(value, min, max) {
+        if (max < min) return min;
+        if (value < min) return min;
+        if (value > max) return max;
+        return value;
+      }
+
+      function clampInt(value, min, max) {
+        if (max < min) return min;
+        if (value < min) return min;
+        if (value > max) return max;
+        return value;
+      }
+
+      function snapValue(value, step) {
+        return Math.round(value / step) * step;
+      }
+
+      function setStatus(text) {
+        if (!els || !els.status) return;
+
+        els.status.textContent = text || '';
+        els.status.classList.toggle('visible', Boolean(text));
+      }
+
+      function showTemporaryStatus(text) {
+        setStatus(text);
+
+        setTimeout(() => {
+          setStatus('');
+        }, 1800);
+      }
+
+      function toDateStr(date) {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+
+        return `${y}-${m}-${d}`;
+      }
+
+      function addDays(isoDate, days) {
+        const date = new Date(`${isoDate}T00:00:00`);
+        date.setDate(date.getDate() + days);
+
+        return toDateStr(date);
+      }
+
+      function formatDateRu(isoDate) {
+        if (!isoDate) return '';
+
+        const [y, m, d] = isoDate.split('-');
+
+        return `${d}.${m}.${y}`;
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? '')
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;');
+      }
+
+      function on(element, eventName, handler, options) {
+        if (!element) {
+          console.warn(`Умный садовод: не удалось навесить событие "${eventName}", элемент не найден.`);
+          return;
+        }
+
+        element.addEventListener(eventName, handler, options);
+      }
+    })();
+  </script>
+</body>
+</html>
