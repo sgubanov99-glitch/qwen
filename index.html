@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Умный садовод — исправленная веб-версия</title>
+  <title>Умный садовод — сохранение плана в файл</title>
 
   <style>
     * {
@@ -268,7 +268,7 @@
     }
 
     /*
-      Важно: скрытая панель не должна перехватывать клики.
+      Скрытая панель не должна перехватывать клики.
       На десктопе оставляем её видимой как обычную колонку.
     */
     .panel:not(.open) {
@@ -376,7 +376,7 @@
 
     <button type="button" id="saveBtn">Сохранить</button>
     <button type="button" id="loadBtn">Загрузить</button>
-    <button type="button" id="resetBtn">Сброс</button>
+    <button type="button" id="resetBtn">Сбросить</button>
     <button type="button" id="generateBtn" class="primary">Календарь</button>
   </header>
 
@@ -422,11 +422,17 @@
     <ol id="calendarList"></ol>
   </dialog>
 
+  <!-- Скрытый input для загрузки файла в браузерах без File System Access API -->
+  <input
+    type="file"
+    id="fileInput"
+    accept=".json,application/json"
+    hidden
+  />
+
   <script>
     (function () {
       'use strict';
-
-      const STORAGE_KEY = 'smart-gardener-web-plan-v1';
 
       const TYPE_LABELS = {
         building: 'Постройка',
@@ -490,7 +496,7 @@
       let selectedId = null;
       let pxPerMeter = 30;
       let dragContext = null;
-      let saveTimer = null;
+      let fileHandle = null;
 
       function ready(callback) {
         if (document.readyState === 'loading') {
@@ -520,7 +526,8 @@
           propertiesBody: document.getElementById('propertiesBody'),
           calendarDialog: document.getElementById('calendarDialog'),
           closeCalendarBtn: document.getElementById('closeCalendarBtn'),
-          calendarList: document.getElementById('calendarList')
+          calendarList: document.getElementById('calendarList'),
+          fileInput: document.getElementById('fileInput')
         };
 
         const missing = Object.entries(els)
@@ -532,12 +539,14 @@
           return;
         }
 
-        loadPlan();
+        // localStorage автоматически больше не загружается.
+        // План открывается только вручную через кнопку "Загрузить".
+
         syncPlotInputs();
         bindEvents();
         renderAll();
 
-        console.info('Умный садовод: интерфейс успешно инициализирован.');
+        console.info('Умный садовод: интерфейс инициализирован. Сохранение и загрузка работают через файл.');
       }
 
       function bindEvents() {
@@ -545,20 +554,17 @@
           state.plot.widthM = clamp(Number(els.plotWidth.value) || 12, 1, 500);
           clampAllObjects();
           renderAll();
-          scheduleSave();
         });
 
         on(els.plotLength, 'change', () => {
           state.plot.lengthM = clamp(Number(els.plotLength.value) || 8, 1, 500);
           clampAllObjects();
           renderAll();
-          scheduleSave();
         });
 
         on(els.gridStep, 'change', () => {
           state.plot.gridStepM = Number(els.gridStep.value) || 0.5;
           renderAll();
-          scheduleSave();
         });
 
         document.querySelectorAll('.add-object').forEach(button => {
@@ -568,15 +574,11 @@
         });
 
         on(els.saveBtn, 'click', () => {
-          savePlan();
-          showTemporaryStatus('План сохранён');
+          savePlanToFile();
         });
 
         on(els.loadBtn, 'click', () => {
-          loadPlan();
-          syncPlotInputs();
-          renderAll();
-          showTemporaryStatus('План загружен из localStorage');
+          loadPlanFromFile();
         });
 
         on(els.resetBtn, 'click', () => {
@@ -584,12 +586,26 @@
 
           state.objects = [];
           selectedId = null;
+          fileHandle = null;
 
           renderAll();
-          savePlan();
+
+          showTemporaryStatus(
+            'План очищен. Нажмите «Загрузить», чтобы открыть сохранённый файл.'
+          );
         });
 
         on(els.generateBtn, 'click', generateAndShowCalendar);
+
+        on(els.fileInput, 'change', async () => {
+          const file = els.fileInput.files && els.fileInput.files[0];
+
+          if (!file) return;
+
+          await applyPlanFile(file);
+
+          els.fileInput.value = '';
+        });
 
         on(els.closePanelBtn, 'click', () => {
           selectedId = null;
@@ -613,6 +629,27 @@
 
         window.addEventListener('resize', () => {
           renderCanvas();
+        });
+
+        // Дополнительно: можно перетащить JSON-файл плана прямо в окно программы.
+        on(document.body, 'dragover', (event) => {
+          event.preventDefault();
+        });
+
+        on(document.body, 'drop', async (event) => {
+          event.preventDefault();
+
+          const file = event.dataTransfer.files && event.dataTransfer.files[0];
+
+          if (!file) return;
+
+          const isJson =
+            file.type === 'application/json' ||
+            file.name.toLowerCase().endsWith('.json');
+
+          if (isJson) {
+            await applyPlanFile(file);
+          }
         });
       }
 
@@ -664,7 +701,6 @@
         selectedId = obj.id;
 
         renderAll();
-        scheduleSave();
       }
 
       function findFreeSpot(obj) {
@@ -972,7 +1008,6 @@
           obj.name = nameEl.value;
           renderCanvas();
           renderObjectList();
-          scheduleSave();
         });
 
         on(xEl, 'change', () => {
@@ -984,7 +1019,6 @@
 
           renderCanvas();
           validateObjectStatus(obj);
-          scheduleSave();
         });
 
         on(yEl, 'change', () => {
@@ -996,7 +1030,6 @@
 
           renderCanvas();
           validateObjectStatus(obj);
-          scheduleSave();
         });
 
         on(widthEl, 'change', () => {
@@ -1005,7 +1038,6 @@
 
           renderCanvas();
           validateObjectStatus(obj);
-          scheduleSave();
         });
 
         on(lengthEl, 'change', () => {
@@ -1014,7 +1046,6 @@
 
           renderCanvas();
           validateObjectStatus(obj);
-          scheduleSave();
         });
 
         on(deleteEl, 'click', () => {
@@ -1022,18 +1053,15 @@
           selectedId = null;
 
           renderAll();
-          scheduleSave();
         });
 
         on(cultureEl, 'change', () => {
           obj.culture = cultureEl.value || null;
           renderObjectList();
-          scheduleSave();
         });
 
         on(plantingDateEl, 'change', () => {
           obj.plantingDate = plantingDateEl.value || null;
-          scheduleSave();
         });
 
         on(bedCountEl, 'change', () => {
@@ -1041,7 +1069,6 @@
           renderProperties();
           renderCanvas();
           renderObjectList();
-          scheduleSave();
         });
 
         root.querySelectorAll('.gh-bed-culture').forEach(select => {
@@ -1053,7 +1080,6 @@
             }
 
             obj.greenhouseBedCultures[index] = select.value || null;
-            scheduleSave();
           });
         });
 
@@ -1066,7 +1092,6 @@
             }
 
             obj.greenhouseBedPlantingDates[index] = input.value || null;
-            scheduleSave();
           });
         });
       }
@@ -1156,7 +1181,6 @@
         }
 
         updateObjectElement(obj, valid);
-        scheduleSave();
       }
 
       function onDragEnd() {
@@ -1182,7 +1206,6 @@
 
         renderObjectList();
         renderProperties();
-        scheduleSave();
       }
 
       function updateObjectElement(obj, valid) {
@@ -1463,31 +1486,153 @@
         });
       }
 
-      function savePlan() {
+      async function savePlanToFile() {
+        // Современный вариант для Chrome / Edge / Opera
+        if ('showSaveFilePicker' in window) {
+          try {
+            const handle = await window.showSaveFilePicker({
+              suggestedName: 'smart-gardener-plan.json',
+              types: [
+                {
+                  description: 'План участка (JSON)',
+                  accept: {
+                    'application/json': ['.json']
+                  }
+                }
+              ]
+            });
+
+            const writable = await handle.createWritable();
+
+            await writable.write(JSON.stringify(state, null, 2));
+            await writable.close();
+
+            fileHandle = handle;
+
+            showTemporaryStatus('План сохранён в файл');
+            return;
+          } catch (error) {
+            if (error && error.name === 'AbortError') {
+              // Пользователь отменил сохранение
+              return;
+            }
+
+            console.warn(
+              'File System Access API не смог сохранить файл, используем запасной вариант.',
+              error
+            );
+          }
+        }
+
+        // Запасной вариант: скачивание файла
         try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+          downloadPlanFallback();
+
+          showTemporaryStatus(
+            'Файл выгружен через загрузку браузера. ' +
+            'Чтобы выбрать папку вручную, включите в браузере настройку "Спрашивать, куда сохранять каждый файл".'
+          );
         } catch (error) {
-          console.warn('Не удалось сохранить план в localStorage', error);
-          showTemporaryStatus('Не удалось сохранить план. Возможно, браузер блокирует localStorage.');
+          console.error('Не удалось сохранить файл:', error);
+          showTemporaryStatus('Не удалось сохранить файл');
         }
       }
 
-      function loadPlan() {
-        try {
-          const raw = localStorage.getItem(STORAGE_KEY);
+      async function loadPlanFromFile() {
+        // Современный вариант для Chrome / Edge / Opera
+        if ('showOpenFilePicker' in window) {
+          try {
+            const [handle] = await window.showOpenFilePicker({
+              multiple: false,
+              types: [
+                {
+                  description: 'План участка (JSON)',
+                  accept: {
+                    'application/json': ['.json']
+                  }
+                }
+              ]
+            });
 
-          if (!raw) return;
+            const file = await handle.getFile();
 
-          const parsed = JSON.parse(raw);
+            await applyPlanFile(file);
 
-          if (parsed && parsed.plot && Array.isArray(parsed.objects)) {
-            state = parsed;
-            selectedId = null;
-            normalizeState();
+            fileHandle = handle;
+            return;
+          } catch (error) {
+            if (error && error.name === 'AbortError') {
+              // Пользователь отменил выбор файла
+              return;
+            }
+
+            console.warn(
+              'File System Access API не смог открыть файл, используем запасной вариант.',
+              error
+            );
           }
-        } catch (error) {
-          console.warn('Не удалось загрузить план', error);
         }
+
+        // Запасной вариант: обычный input type="file"
+        if (els.fileInput) {
+          els.fileInput.click();
+        } else {
+          showTemporaryStatus('Не удалось открыть диалог выбора файла');
+        }
+      }
+
+      async function applyPlanFile(file) {
+        try {
+          const text = await file.text();
+
+          const parsed = JSON.parse(text);
+
+          if (!parsed || typeof parsed !== 'object') {
+            throw new Error('Файл не является корректным объектом JSON');
+          }
+
+          if (!parsed.plot || !Array.isArray(parsed.objects)) {
+            throw new Error('Файл не похож на план участка');
+          }
+
+          state = parsed;
+          selectedId = null;
+
+          normalizeState();
+          renderAll();
+
+          showTemporaryStatus('План загружен из файла');
+        } catch (error) {
+          console.error('Ошибка применения файла плана:', error);
+
+          alert(
+            'Не удалось загрузить файл плана.\n\n' +
+            'Проверьте, что вы выбираете JSON-файл, сохранённый этой программой.'
+          );
+        }
+      }
+
+      function downloadPlanFallback() {
+        const json = JSON.stringify(state, null, 2);
+
+        const blob = new Blob([json], {
+          type: 'application/json'
+        });
+
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+
+        link.href = url;
+        link.download = 'smart-gardener-plan.json';
+
+        document.body.appendChild(link);
+
+        link.click();
+
+        link.remove();
+
+        URL.revokeObjectURL(url);
       }
 
       function normalizeState() {
@@ -1522,13 +1667,13 @@
 
             obj.greenhouseBedPlantingDates = Array.from(
               { length: obj.greenhouseBedCount },
-              (_, i) => obj.greenhouseBedPlantingDates?.[i] ?? null
+              (_, i) => normalizeDate(obj.greenhouseBedPlantingDates?.[i])
             );
           }
 
           if (obj.type === 'bed') {
             obj.culture = obj.culture || null;
-            obj.plantingDate = obj.plantingDate || null;
+            obj.plantingDate = normalizeDate(obj.plantingDate);
           }
 
           if (obj.type === 'tree' || obj.type === 'bush') {
@@ -1537,14 +1682,6 @@
         });
 
         clampAllObjects();
-      }
-
-      function scheduleSave() {
-        clearTimeout(saveTimer);
-
-        saveTimer = setTimeout(() => {
-          savePlan();
-        }, 300);
       }
 
       function clampAllObjects() {
@@ -1615,7 +1752,7 @@
 
         setTimeout(() => {
           setStatus('');
-        }, 1800);
+        }, 2200);
       }
 
       function toDateStr(date) {
@@ -1639,6 +1776,18 @@
         const [y, m, d] = isoDate.split('-');
 
         return `${d}.${m}.${y}`;
+      }
+
+      function normalizeDate(value) {
+        if (!value) return null;
+
+        const str = String(value);
+
+        if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+          return str;
+        }
+
+        return null;
       }
 
       function escapeHtml(value) {
