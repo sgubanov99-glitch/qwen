@@ -1,545 +1,554 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Подбор конфигурации ПК для локальных нейросетей</title>
-<style>
-  :root {
-    --bg: #1a1b1f;
-    --bg-card: #25262b;
-    --bg-elev: #2f3138;
-    --accent: #7c9eff;
-    --accent-soft: #4c6ef5;
-    --text: #e4e6eb;
-    --muted: #9aa0a6;
-    --border: #35373e;
-    --highlight: rgba(124,158,255,0.18);
-    --highlight-strong: rgba(124,158,255,0.35);
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    line-height: 1.6;
-    padding: 32px 20px;
-  }
-  .container { max-width: 1280px; margin: 0 auto; }
-  h1 {
-    font-size: clamp(1.8rem, 3.2vw, 2.6rem);
-    margin: 0 0 12px;
-    background: linear-gradient(90deg, #7c9eff, #b07cff);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-  .intro { color: var(--muted); margin-bottom: 28px; max-width: 900px; }
-  .task-picker {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px 24px;
-    margin-bottom: 32px;
-  }
-  .task-picker label {
-    display: block;
-    font-size: 0.95rem;
-    color: var(--muted);
-    margin-bottom: 8px;
-  }
-  .task-picker select {
-    width: 100%;
-    max-width: 520px;
-    padding: 12px 14px;
-    background: var(--bg-elev);
-    color: var(--text);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 1rem;
-    cursor: pointer;
-  }
-  .task-picker select:focus { outline: 2px solid var(--accent); }
-  .task-hint {
-    margin-top: 14px;
-    padding: 14px 16px;
-    background: var(--bg-elev);
-    border-left: 3px solid var(--accent);
-    border-radius: 6px;
-    font-size: 0.95rem;
-    transition: opacity 0.25s ease;
-  }
-  .task-hint strong { color: var(--accent); }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Умный садовод — веб-версия</title>
 
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 22px;
-  }
-  @media (max-width: 980px) { .grid { grid-template-columns: 1fr; } }
-
-  .card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 22px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    transition: transform 0.2s ease, border-color 0.2s ease;
-  }
-  .card:hover { transform: translateY(-2px); border-color: var(--accent); }
-  .card h2 {
-    margin: 0;
-    font-size: 1.35rem;
-    color: var(--text);
-  }
-  .card .budget {
-    display: inline-block;
-    background: var(--accent-soft);
-    color: #fff;
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-size: 0.82rem;
-    margin-top: 6px;
-  }
-
-  .section-title {
-    font-size: 0.78rem;
-    text-transform: uppercase;
-    letter-spacing: 1.2px;
-    color: var(--accent);
-    margin: 6px 0 8px;
-    font-weight: 600;
-  }
-
-  .components { list-style: none; padding: 0; margin: 0; }
-  .components li {
-    padding: 10px 12px;
-    border-radius: 8px;
-    border-bottom: 1px solid var(--border);
-    transition: background-color 0.3s ease, border-color 0.3s ease;
-  }
-  .components li:last-child { border-bottom: none; }
-  .components li .name {
-    font-weight: 600;
-    color: #fff;
-    display: block;
-    margin-bottom: 2px;
-  }
-  .components li .reason {
-    color: var(--muted);
-    font-size: 0.88rem;
-  }
-  .components li.highlight {
-    background: var(--highlight);
-    border-left: 3px solid var(--accent);
-  }
-  .components li.highlight .reason { color: #d4dcff; }
-
-  .performance { list-style: none; padding: 0; margin: 0; }
-  .performance li {
-    padding: 6px 0 6px 20px;
-    position: relative;
-    font-size: 0.92rem;
-  }
-  .performance li::before {
-    content: "▸";
-    color: var(--accent);
-    position: absolute;
-    left: 4px;
-  }
-
-  .compat {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-  .compat span {
-    background: var(--bg-elev);
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 0.82rem;
-    color: var(--muted);
-    border: 1px solid var(--border);
-  }
-
-  .rating {
-    color: #ffc44d;
-    font-size: 0.9rem;
-  }
-  .rating .count { color: var(--muted); margin-left: 4px; }
-
-  .buy-links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: auto;
-  }
-  .buy-links a {
-    flex: 1 1 30%;
-    text-align: center;
-    padding: 10px 8px;
-    background: var(--bg-elev);
-    color: var(--text);
-    text-decoration: none;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    font-size: 0.9rem;
-    transition: background 0.2s ease, border-color 0.2s ease;
-  }
-  .buy-links a:hover {
-    background: var(--accent-soft);
-    border-color: var(--accent);
-    color: #fff;
-  }
-
-  .recommendations {
-    margin-top: 40px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 24px;
-  }
-  .recommendations h2 {
-    margin: 0 0 14px;
-    color: var(--accent);
-  }
-  .recommendations ul { padding-left: 22px; margin: 0; }
-  .recommendations li { margin-bottom: 6px; }
-  .recommendations .warning {
-    margin-top: 16px;
-    padding: 12px 16px;
-    background: rgba(255, 180, 77, 0.08);
-    border-left: 3px solid #ffb44d;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    color: #ffd594;
-  }
-
-  .footnote {
-    text-align: center;
-    color: var(--muted);
-    font-size: 0.8rem;
-    margin-top: 28px;
-    padding: 14px;
-    border-top: 1px solid var(--border);
-  }
-</style>
-</head>
-<body>
-<div class="container">
-
-  <h1>Подбор конфигурации ПК для локальных нейросетей</h1>
-  <p class="intro">
-    Ниже представлены три сборки для запуска нейросетей локально: ComfyUI, Stable Diffusion WebUI (Automatic1111 / Forge), Ollama, LM Studio, vLLM и аналогичных инструментов. Конфигурации учитывают специфику AI‑нагрузок: большой объём VRAM, достаточный объём оперативной памяти, быстрые NVMe‑накопители для подгрузки моделей и запас по мощности блока питания.
-  </p>
-  <p class="intro">
-    Выберите свой тип задач — страница подсветит те компоненты, на которые стоит обратить особое внимание именно в вашем сценарии.
-  </p>
-
-  <div class="task-picker">
-    <label for="task">Тип задач:</label>
-    <select id="task">
-      <option value="universal">Универсальный вариант</option>
-      <option value="images">Генерация изображений (SDXL, Flux)</option>
-      <option value="llm">Работа с LLM (Llama, Qwen)</option>
-      <option value="training">Обучение / дообучение небольших моделей</option>
-    </select>
-    <div class="task-hint" id="hint">
-      <strong>Универсальный вариант:</strong> важен баланс между VRAM, RAM и скоростью накопителя — чтобы комфортно работать и с изображениями, и с текстовыми моделями.
-    </div>
-  </div>
-
-  <div class="grid">
-
-    <!-- БЮДЖЕТНАЯ -->
-    <div class="card" data-tier="budget">
-      <div>
-        <h2>Бюджетная сборка</h2>
-        <span class="budget">≈ 120 000 – 150 000 ₽</span>
-      </div>
-
-      <div>
-        <div class="section-title">Компоненты</div>
-        <ul class="components">
-          <li data-key="cpu ram">
-            <span class="name">Intel Core i5-12400F</span>
-            <span class="reason">Достаточен для ComfyUI / Ollama, не «режет» скорость генерации картинок.</span>
-          </li>
-          <li data-key="gpu">
-            <span class="name">NVIDIA RTX 4060 Ti 16 GB</span>
-            <span class="reason">16 ГБ VRAM — минимум для SDXL и Flux без квантования.</span>
-          </li>
-          <li data-key="mother">
-            <span class="name">MSI PRO B760-P WIFI DDR4</span>
-            <span class="reason">Разъём M.2 PCIe 4.0 для быстрого SSD и слот под будущий апгрейд.</span>
-          </li>
-          <li data-key="ram">
-            <span class="name">32 ГБ DDR4 3200 МГц (2×16 ГБ)</span>
-            <span class="reason">Позволяет держать в памяти LLM 13B + систему без swap.</span>
-          </li>
-          <li data-key="ssd">
-            <span class="name">SSD NVMe 1 ТБ PCIe 4.0 (ADATA / Kingston)</span>
-            <span class="reason">Ускоряет загрузку весов моделей и чек‑поинтов SDXL.</span>
-          </li>
-          <li data-key="psu">
-            <span class="name">БП 650 Вт 80+ Bronze (Deepcool PK650D)</span>
-            <span class="reason">Запас по питанию ~150 Вт — стабильная работа под длительной нагрузкой.</span>
-          </li>
-          <li data-key="case">
-            <span class="name">Корпус с mesh‑панелью (Deepcool CC560 V2)</span>
-            <span class="reason">Хороший воздушный поток — GPU не уходит в тротлинг при долгой генерации.</span>
-          </li>
-        </ul>
-      </div>
-
-      <div>
-        <div class="section-title">Ожидаемая производительность</div>
-        <ul class="performance">
-          <li>SDXL 1024×1024, 20 шагов: ~5–7 сек / кадр</li>
-          <li>Flux.1 dev в bf16 работает только с квантованными весами (NF4)</li>
-          <li>LLM 7B Q4_0 в Ollama: ~30–40 токенов/сек</li>
-          <li>Стабильная работа сессий 2–3 часа без деградации</li>
-        </ul>
-      </div>
-
-      <div>
-        <div class="section-title">Совместимость</div>
-        <div class="compat">
-          <span>ComfyUI</span>
-          <span>Automatic1111</span>
-          <span>Ollama</span>
-          <span>LM Studio</span>
-          <span>Fooocus</span>
-        </div>
-      </div>
-
-      <div class="rating">
-        ★★★★☆ высокий рейтинг на маркетплейсах
-        <span class="count">(от 100+ отзывов, рейтинг ≥ 4.7 по аналогам линейки)</span>
-      </div>
-
-      <div class="buy-links">
-        <a href="https://www.ozon.ru/search/?text=RTX+4060+Ti+16GB" target="_blank" rel="noopener">Ozon</a>
-        <a href="https://www.wildberries.ru/catalog/0/search.aspx?search=RTX+4060+Ti+16GB" target="_blank" rel="noopener">Wildberries</a>
-        <a href="https://www.dns-shop.ru/search/?q=RTX+4060+Ti+16GB" target="_blank" rel="noopener">DNS</a>
-      </div>
-    </div>
-
-    <!-- ОПТИМАЛЬНАЯ -->
-    <div class="card" data-tier="optimal">
-      <div>
-        <h2>Оптимальная сборка</h2>
-        <span class="budget">≈ 230 000 – 270 000 ₽</span>
-      </div>
-
-      <div>
-        <div class="section-title">Компоненты</div>
-        <ul class="components">
-          <li data-key="cpu ram training">
-            <span class="name">AMD Ryzen 7 7700X</span>
-            <span class="reason">8C/16T, высокие частоты — быстрая предобработка и LoRA‑тренировки.</span>
-          </li>
-          <li data-key="gpu">
-            <span class="name">NVIDIA RTX 4070 Ti SUPER 16 GB</span>
-            <span class="reason">16 ГБ GDDR6X и широкий шина — SDXL/Flux работают в bf16, LLM 13B Q5 влезает целиком.</span>
-          </li>
-          <li data-key="mother">
-            <span class="name">MSI MAG B650 TOMAHAWK WIFI</span>
-            <span class="reason">Хороший VRM для многочасовых тренировок и поддержка DDR5‑6000.</span>
-          </li>
-          <li data-key="ram training">
-            <span class="name">32 ГБ DDR5 6000 МГц CL30 (2×16 ГБ)</span>
-            <span class="reason">Высокая пропускная способность ускоряет токенизацию и батч‑процессы.</span>
-          </li>
-          <li data-key="ssd">
-            <span class="name">SSD NVMe 2 ТБ PCIe 4.0 (Samsung 990 Evo / WD SN850X)</span>
-            <span class="reason">Место под множество чек‑поинтов, LoRA и кэшей моделей.</span>
-          </li>
-          <li data-key="psu">
-            <span class="name">БП 850 Вт 80+ Gold (Deepcool PX850G / be quiet! Pure Power 12)</span>
-            <span class="reason">Запас ~200 Вт под пиковые скачки при инференсе и LoRA.</span>
-          </li>
-          <li data-key="case">
-            <span class="name">Lian Li LANCOOL 216</span>
-            <span class="reason">Два 160‑мм вентилятора — отличный обдув видеокарты при длинных рендерах.</span>
-          </li>
-        </ul>
-      </div>
-
-      <div>
-        <div class="section-title">Ожидаемая производительность</div>
-        <ul class="performance">
-          <li>SDXL 1024×1024, 20 шагов: ~2.5–3.5 сек / кадр</li>
-          <li>Flux.1 dev bf16: ~8–12 сек / кадр 1024×1024</li>
-          <li>LLM 13B Q5 в Ollama: ~35–45 токенов/сек, модель целиком в VRAM</li>
-          <li>LoRA‑обучение SDXL: 2000 шагов за ~15–20 минут</li>
-        </ul>
-      </div>
-
-      <div>
-        <div class="section-title">Совместимость</div>
-        <div class="compat">
-          <span>ComfyUI</span>
-          <span>Automatic1111 / Forge</span>
-          <span>Ollama</span>
-          <span>LM Studio</span>
-          <span>vLLM</span>
-          <span>Diffusers</span>
-        </div>
-      </div>
-
-      <div class="rating">
-        ★★★★★ высокий рейтинг на маркетплейсах
-        <span class="count">(от 100+ отзывов, рейтинг ≥ 4.7 по линейке)</span>
-      </div>
-
-      <div class="buy-links">
-        <a href="https://www.ozon.ru/search/?text=RTX+4070+Ti+Super+16GB" target="_blank" rel="noopener">Ozon</a>
-        <a href="https://www.wildberries.ru/catalog/0/search.aspx?search=RTX+4070+Ti+Super+16GB" target="_blank" rel="noopener">Wildberries</a>
-        <a href="https://www.dns-shop.ru/search/?q=RTX+4070+Ti+Super+16GB" target="_blank" rel="noopener">DNS</a>
-      </div>
-    </div>
-
-    <!-- ПРОФЕССИОНАЛЬНАЯ -->
-    <div class="card" data-tier="pro">
-      <div>
-        <h2>Профессиональная сборка</h2>
-        <span class="budget">≈ 380 000 – 470 000 ₽</span>
-      </div>
-
-      <div>
-        <div class="section-title">Компоненты</div>
-        <ul class="components">
-          <li data-key="cpu ram training">
-            <span class="name">AMD Ryzen 9 7950X</span>
-            <span class="reason">16C/32T — параллельная токенизация, датасеты и дообучение ускоряются в разы.</span>
-          </li>
-          <li data-key="gpu">
-            <span class="name">NVIDIA RTX 5090 32 GB</span>
-            <span class="reason">32 ГБ GDDR7 — запускает Flux.1 pro, LLM 30B+ и LLaMA 70B Q4 без оффлоада.</span>
-          </li>
-          <li data-key="mother">
-            <span class="name">ASUS ProArt X670E-CREATOR WIFI</span>
-            <span class="reason">10G Ethernet + 4×M.2 — удобная работа с большими датасетами и моделями.</span>
-          </li>
-          <li data-key="ram training">
-            <span class="name">64 ГБ DDR5 6000 МГц CL30 (2×32 ГБ)</span>
-            <span class="reason">Держит LLM 70B в RAM как fallback и позволяет батчи 8+ при тренировке.</span>
-          </li>
-          <li data-key="ssd">
-            <span class="name">SSD NVMe 4 ТБ PCIe 4.0 (Samsung 990 Pro)</span>
-            <span class="reason">Мгновенная подгрузка моделей, место под десятки чек‑поинтов и датасеты.</span>
-          </li>
-          <li data-key="psu">
-            <span class="name">БП 1200 Вт 80+ Gold (be quiet! Dark Power 13 / Corsair RM1200x)</span>
-            <span class="reason">TDP 5090 ~575 Вт — БП остаётся в «тихой» зоне 50–60 % нагрузки.</span>
-          </li>
-          <li data-key="case">
-            <span class="case" style="font-weight:600;color:#fff;">Fractal Design North XL / Lian Li O11D EVO</span>
-            <span class="reason">Просторный корпус под крупные 3‑слотовые карты и СЖО до 360 мм.</span>
-          </li>
-        </ul>
-      </div>
-
-      <div>
-        <div class="section-title">Ожидаемая производительность</div>
-        <ul class="performance">
-          <li>SDXL 1024×1024, 20 шагов: ~1–1.5 сек / кадр</li>
-          <li>Flux.1 pro bf16: ~4–6 сек / кадр 1024×1024</li>
-          <li>LLM 70B Q4 в Ollama / vLLM: ~20–30 токенов/сек полностью в VRAM</li>
-          <li>Полный файн‑тьюнинг LLaMA‑13B LoRA за 1–2 часа на 10k примеров</li>
-        </ul>
-      </div>
-
-      <div>
-        <div class="section-title">Совместимость</div>
-        <div class="compat">
-          <span>ComfyUI</span>
-          <span>Automatic1111 / Forge</span>
-          <span>Ollama</span>
-          <span>LM Studio</span>
-          <span>vLLM</span>
-          <span>Transformers / PEFT</span>
-          <span>RunPod / Docker</span>
-        </div>
-      </div>
-
-      <div class="rating">
-        ★★★★★ высокий рейтинг на маркетплейсах
-        <span class="count">(от 100+ отзывов, рейтинг ≥ 4.8 по флагманским линейкам)</span>
-      </div>
-
-      <div class="buy-links">
-        <a href="https://www.ozon.ru/search/?text=RTX+5090+32GB" target="_blank" rel="noopener">Ozon</a>
-        <a href="https://www.wildberries.ru/catalog/0/search.aspx?search=RTX+5090+32GB" target="_blank" rel="noopener">Wildberries</a>
-        <a href="https://www.dns-shop.ru/search/?q=RTX+5090+32GB" target="_blank" rel="noopener">DNS</a>
-      </div>
-    </div>
-
-  </div>
-
-  <div class="recommendations">
-    <h2>Общие рекомендации</h2>
-    <ul>
-      <li><strong>Охлаждение:</strong> для RTX 4070 Ti Super и выше — минимум 2–3 вентилятора в корпусе (вдув + выдув). Процессоры 7950X/14700K лучше охлаждать двухбашенным суперкулером или СЖО 280+ мм.</li>
-      <li><strong>Блок питания:</strong> всегда берите с запасом 20–30 % от пикового потребления системы. Для AI‑нагрузок важен сертификат 80+ Gold — меньше нагрев и больше КПД при длительной работе.</li>
-      <li><strong>Драйверы:</strong> используйте стабильные NVIDIA Studio‑драйверы, а не Game Ready — они лучше работают с PyTorch, xFormers и CUDA‑12.8+.</li>
-      <li><strong>Место на диске:</strong> оставляйте минимум 15–20 % свободного места на системном SSD — иначе производительность NVMe падает, а загрузка моделей замедляется.</li>
-    </ul>
-    <div class="warning">
-      ⚠ Цены, наличие и состав партий в магазинах меняются со временем. Перед покупкой обязательно сверяйтесь с актуальными предложениями на Ozon, Wildberries и DNS. Ссылки в карточках — шаблонные поисковые запросы, а не карточки конкретных товаров.
-    </div>
-  </div>
-
-  <div class="footnote">
-    Подборка составлена в августе 2026 года. Конфигурации ориентированы на локальный запуск ComfyUI, Stable Diffusion WebUI, Ollama, LM Studio, vLLM и аналогичных инструментов.
-  </div>
-
-</div>
-
-<script>
-(function() {
-  const hints = {
-    universal: {
-      text: '<strong>Универсальный вариант:</strong> важен баланс между VRAM, RAM и скоростью накопителя — чтобы комфортно работать и с изображениями, и с текстовыми моделями.',
-      keys: ['gpu', 'ram']
-    },
-    images: {
-      text: '<strong>Генерация изображений (SDXL / Flux):</strong> критичен объём видеопамяти и пропускная способность VRAM. RAM важна в меньшей степени, но нужен быстрый NVMe для чек‑поинтов.',
-      keys: ['gpu', 'ssd']
-    },
-    llm: {
-      text: '<strong>Работа с LLM (Llama / Qwen):</strong> важнее всего объём VRAM для размещения модели и объём RAM как резерв. Скорость CPU влияет на токенизацию, но не критична.',
-      keys: ['gpu', 'ram']
-    },
-    training: {
-      text: '<strong>Обучение / дообучение:</strong> критичны мощный многоядерный CPU, быстрая RAM DDR5 и большой объём VRAM для батчей. Также важен VRM материнской платы и запас БП.',
-      keys: ['cpu', 'ram', 'training']
+  <style>
+    * {
+      box-sizing: border-box;
     }
-  };
 
-  const select = document.getElementById('task');
-  const hint = document.getElementById('hint');
-  const allItems = document.querySelectorAll('.components li');
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f3f6f3;
+      color: #223;
+    }
 
-  function update() {
-    const key = select.value;
-    const data = hints[key];
-    hint.innerHTML = data.text;
+    button,
+    input,
+    select {
+      font: inherit;
+      padding: 8px 10px;
+      border: 1px solid #cfd8cf;
+      border-radius: 8px;
+      background: white;
+    }
 
-    allItems.forEach(li => {
-      const liKeys = (li.dataset.key || '').split(' ');
-      const match = liKeys.some(k => data.keys.includes(k));
-      li.classList.toggle('highlight', match);
-    });
-  }
+    button {
+      cursor: pointer;
+    }
 
-  select.addEventListener('change', update);
-  update();
-})();
-</script>
-</body>
-</html>
+    .primary {
+      background: #2e7d32;
+      border-color: #2e7d32;
+      color: white;
+    }
+
+    .btn-danger {
+      background: #d32f2f;
+      border-color: #d32f2f;
+      color: white;
+      width: 100%;
+      margin-top: 12px;
+    }
+
+    .toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: white;
+      border-bottom: 1px solid #d7e0d7;
+      min-height: 56px;
+    }
+
+    .toolbar label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .toolbar input,
+    .toolbar select {
+      width: 90px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr) 340px;
+      gap: 12px;
+      padding: 12px;
+      height: calc(100vh - 64px);
+    }
+
+    .side {
+      background: white;
+      border: 1px solid #d7e0d7;
+      border-radius: 12px;
+      padding: 12px;
+      overflow: auto;
+    }
+
+    .side h3 {
+      margin: 0 0 10px;
+      font-size: 15px;
+    }
+
+    .palette-buttons {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .object-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .list-item {
+      text-align: left;
+      background: #fafafa;
+      border: 1px solid #d7e0d7;
+      border-radius: 8px;
+      padding: 8px;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .list-item.selected {
+      border-color: #1976d2;
+      background: #e3f2fd;
+    }
+
+    .canvas-wrap {
+      position: relative;
+      overflow: auto;
+      padding: 16px;
+      background: #eef6ee;
+      border: 1px solid #d7e0d7;
+      border-radius: 12px;
+    }
+
+    .canvas {
+      position: relative;
+      margin: auto;
+      background: white;
+      border: 2px solid #388e3c;
+      border-radius: 4px;
+      touch-action: none;
+      background-image:
+        linear-gradient(to right, rgba(0, 0, 0, 0.07) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 0, 0, 0.07) 1px, transparent 1px);
+    }
+
+    .object {
+      position: absolute;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2px;
+      overflow: hidden;
+      border: 2px solid rgba(0, 0, 0, 0.35);
+      border-radius: 8px;
+      font-size: 11px;
+      text-align: center;
+      user-select: none;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    .object.selected {
+      outline: 3px solid #1976d2;
+      z-index: 2;
+    }
+
+    .object.invalid {
+      outline: 3px solid #d32f2f;
+    }
+
+    .status {
+      position: absolute;
+      left: 12px;
+      bottom: 12px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.72);
+      color: white;
+      font-size: 12px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .status.visible {
+      opacity: 1;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .panel-header h3 {
+      margin: 0;
+    }
+
+    .prop-type {
+      font-size: 12px;
+      color: #567;
+      margin-bottom: 8px;
+    }
+
+    .prop-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 10px 0;
+    }
+
+    .prop-field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+
+    .prop-field input,
+    .prop-field select {
+      width: 100%;
+    }
+
+    .bed-box {
+      border: 1px solid #d7e0d7;
+      border-radius: 10px;
+      padding: 8px;
+      margin: 8px 0;
+    }
+
+    .bed-box legend {
+      font-size: 12px;
+      padding: 0 4px;
+      color: #456;
+    }
+
+    .muted {
+      color: #667;
+      font-size: 12px;
+    }
+
+    dialog {
+      border: none;
+      border-radius: 12px;
+      padding: 16px;
+      width: min(720px, calc(100vw - 32px));
+      max-height: 80vh;
+      overflow: auto;
+    }
+
+    dialog::backdrop {
+      background: rgba(0, 0, 0, 0.35);
+    }
+
+    dialog ol {
+      margin: 0;
+      padding-left: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    dialog li small {
+      color: #567;
+    }
+
+    @media (max-width: 1100px) {
+      .layout {
+        grid-template-columns: 240px minmax(0, 1fr);
+        height: calc(100vh - 84px);
+      }
+
+      .panel {
+        position: fixed;
+        right: 0;
+        top: 64px;
+        bottom: 0;
+        width: min(420px, 100%);
+        border-radius: 12px 0 0 12px;
+        transform: translateX(110%);
+        transition: transform 0.2s ease;
+        z-index: 30;
+        box-shadow: -8px 0 24px rgba(0, 0, 0, 0.08);
+      }
+
+      .panel.open {
+        transform: translateX(0);
+      }
+    }
+
+    @media (max-width: 760px) {
+      .toolbar {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+      }
+
+      .layout {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto minmax(320px, 1fr);
+        height: auto;
+      }
+
+      .palette-buttons {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .side.palette {
+        max-height: 220px;
+      }
+
+      .canvas-wrap {
+        min-height: 55vh;
+      }
+
+      .panel {
+        top: auto;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        height: 48vh;
+        border-radius: 16px 16px 0 0;
+        transform: translateY(110%);
+      }
+
+      .panel.open {
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="toolbar">
+    <strong>Умный садовод</strong>
+
+    <label>
+      Ширина, м
+      <input id="plotWidth" type="number" min="1" max="500" step="0.5" />
+    </label>
+
+    <label>
+      Длина, м
+      <input id="plotLength" type="number" min="1" max="500" step="0.5" />
+    </label>
+
+    <label>
+      Сетка, м
+      <select id="gridStep">
+        <option value="0.1">0.1</option>
+        <option value="0.25">0.25</option>
+        <option value="0.5" selected>0.5</option>
+        <option value="1">1</option>
+      </select>
+    </label>
+
+    <button id="saveBtn">Сохранить</button>
+    <button id="loadBtn">Загрузить</button>
+    <button id="resetBtn">Сброс</button>
+    <button id="generateBtn" class="primary">Календарь</button>
+  </header>
+
+  <div class="layout">
+    <aside class="side palette">
+      <h3>Добавить объект</h3>
+
+      <div class="palette-buttons">
+        <button class="add-object" data-type="building">Постройка</button>
+        <button class="add-object" data-type="greenhouse">Теплица</button>
+        <button class="add-object" data-type="bed">Грядка</button>
+        <button class="add-object" data-type="tree">Дерево</button>
+        <button class="add-object" data-type="bush">Кустарник</button>
+      </div>
+
+      <h3>Список объектов</h3>
+      <div id="objectList" class="object-list"></div>
+    </aside>
+
+    <main class="canvas-wrap" id="canvasWrap">
+      <div id="canvas" class="canvas"></div>
+      <div id="status" class="status"></div>
+    </main>
+
+    <aside class="side panel" id="panel">
+      <div class="panel-header">
+        <h3>Настройки объекта</h3>
+        <button id="closePanelBtn" title="Закрыть">✕</button>
+      </div>
+
+      <div id="propertiesBody">
+        Выберите объект на схеме или в списке.
+      </div>
+    </aside>
+  </div>
+
+  <dialog id="calendarDialog">
+    <div class="panel-header">
+      <h3>Календарь работ</h3>
+      <button id="closeCalendarBtn">✕</button>
+    </div>
+
+    <ol id="calendarList"></ol>
+  </dialog>
+
+  <script>
+    const STORAGE_KEY = 'smart-gardener-web-plan-v1';
+
+    const TYPE_LABELS = {
+      building: 'Постройка',
+      greenhouse: 'Теплица',
+      bed: 'Грядка',
+      tree: 'Дерево',
+      bush: 'Кустарник'
+    };
+
+    const TYPE_COLORS = {
+      building: '#d7ccc8',
+      greenhouse: '#c8e6c9',
+      bed: '#dcedc8',
+      tree: '#b2dfdb',
+      bush: '#ffe0b2'
+    };
+
+    const CROPS = [
+      'Томат',
+      'Огурец',
+      'Перец',
+      'Салат',
+      'Клубника',
+      'Укроп',
+      'Петрушка',
+      'Лук',
+      'Чеснок',
+      'Морковь',
+      'Редис',
+      'Кабачок',
+      'Тыква'
+    ];
+
+    const TREE_CULTURES = [
+      'Яблоня',
+      'Груша',
+      'Слива',
+      'Вишня',
+      'Черешня'
+    ];
+
+    const BUSH_CULTURES = [
+      'Смородина',
+      'Малина',
+      'Крыжовник',
+      'Ежевика',
+      'Жимолость',
+      'Виноград'
+    ];
+
+    let state = {
+      plot: {
+        widthM: 12,
+        lengthM: 8,
+        gridStepM: 0.5
+      },
+      objects: []
+    };
+
+    let selectedId = null;
+    let pxPerMeter = 30;
+    let dragContext = null;
+    let saveTimer = null;
+
+    const els = {
+      plotWidth: document.getElementById('plotWidth'),
+      plotLength: document.getElementById('plotLength'),
+      gridStep: document.getElementById('gridStep'),
+      saveBtn: document.getElementById('saveBtn'),
+      loadBtn: document.getElementById('loadBtn'),
+      resetBtn: document.getElementById('resetBtn'),
+      generateBtn: document.getElementById('generateBtn'),
+      canvasWrap: document.getElementById('canvasWrap'),
+      canvas: document.getElementById('canvas'),
+      status: document.getElementById('status'),
+      objectList: document.getElementById('objectList'),
+      panel: document.getElementById('panel'),
+      closePanelBtn: document.getElementById('closePanelBtn'),
+      propertiesBody: document.getElementById('propertiesBody'),
+      calendarDialog: document.getElementById('calendarDialog'),
+      closeCalendarBtn: document.getElementById('closeCalendarBtn'),
+      calendarList: document.getElementById('calendarList')
+    };
+
+    init();
+
+    function init() {
+      loadPlan();
+      syncPlotInputs();
+      bindEvents();
+      renderAll();
+    }
+
+    function bindEvents() {
+      els.plotWidth.addEventListener('change', () => {
+        state.plot.widthM = clamp(Number(els.plotWidth.value) || 12, 1, 500);
+        clampAllObjects();
+        renderAll();
+        scheduleSave();
+      });
+
+      els.plotLength.addEventListener('change', () => {
+        state.plot.lengthM = clamp(Number(els.plotLength.value) || 8, 1, 500);
+        clampAllObjects();
+        renderAll();
+        scheduleSave();
+      });
+
+      els.gridStep.addEventListener('change', () => {
+        state.plot.gridStepM = Number(els.gridStep.value) || 0.5;
+        renderAll();
+        scheduleSave();
+      });
+
+      document.querySelectorAll('.add-object').forEach(button => {
+        button.addEventListener('click', () => {
+          createObject(button.dataset.type);
+        });
+      });
+
+      els.saveBtn.addEventListener('click', () => {
+        savePlan();
+        showTemporaryStatus('План сохранён');
+      });
+
+      els.loadBtn.addEventListener('click', () => {
+        loadPlan();
+        syncPlotInputs();
+        renderAll();
+        showTemporaryStatus('План загружен из localStorage');
+      });
+
+      els.resetBtn.addEventListener('click', () => {
+        if (!confirm('Очистить текущий план?')) return;
+
+        state.objects = [];
+        selectedId = null;
+        renderAll();
+        savePlan();
+      });
+
+      els.generateBtn.addEventListener('click', generateAndShowCalendar);
+
+      els.closePanelBtn.addEventListener('click', () => {
