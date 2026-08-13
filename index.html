@@ -3,9 +3,34 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Умный садовод — сохранение плана в файл</title>
+  <title>Умный садовод</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@600;700&display=swap"
+    rel="stylesheet"
+  />
 
   <style>
+    :root {
+      --bg: #F7F3EC;
+      --text: #2C2C2C;
+
+      --card: #FFF9EE;
+      --card-green: #EAF5DF;
+      --card-beige: #F6EFDD;
+
+      --white: #FFFFFF;
+
+      --shadow: 0 10px 20px rgba(70, 60, 40, 0.12);
+      --shadow-hover: 0 16px 28px rgba(70, 60, 40, 0.18);
+
+      --radius-card: 16px;
+      --radius-big: 24px;
+      --radius-huge: 30px;
+    }
+
     * {
       box-sizing: border-box;
     }
@@ -14,177 +39,403 @@
     body {
       margin: 0;
       padding: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      background: #f3f6f3;
-      color: #223;
     }
 
-    button,
-    input,
-    select {
-      font: inherit;
-      padding: 8px 10px;
-      border: 1px solid #cfd8cf;
-      border-radius: 8px;
-      background: white;
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Inter", Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+      letter-spacing: 0.2px;
     }
 
-    button {
-      cursor: pointer;
+    h1,
+    h2,
+    h3,
+    h4,
+    .section-title {
+      font-family: "Montserrat", "Inter", sans-serif;
+      font-weight: 600;
+      font-size: 20px;
+      line-height: 1.3;
+      margin: 0 0 10px;
     }
 
-    .primary {
-      background: #2e7d32;
-      border-color: #2e7d32;
-      color: white;
+    .app-title {
+      font-family: "Montserrat", "Inter", sans-serif;
+      font-weight: 700;
+      font-size: 30px;
+      line-height: 1.2;
+      letter-spacing: 0.3px;
+      margin: 0;
+      color: #2F4C33;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
     }
 
-    .btn-danger {
-      background: #d32f2f;
-      border-color: #d32f2f;
-      color: white;
-      width: 100%;
-      margin-top: 12px;
-    }
+    /* Шапка */
 
     .toolbar {
       position: sticky;
       top: 0;
-      z-index: 20;
+      z-index: 30;
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
-      background: white;
-      border-bottom: 1px solid #d7e0d7;
-      min-height: 56px;
+      gap: 12px;
+      padding: 14px 16px;
+      background: rgba(255, 249, 238, 0.92);
+      backdrop-filter: blur(8px);
+      border-bottom: 2px solid rgba(255, 255, 255, 0.9);
+      box-shadow: 0 8px 18px rgba(70, 60, 40, 0.08);
     }
 
     .toolbar label {
       display: flex;
       align-items: center;
       gap: 6px;
-      font-size: 13px;
-      white-space: nowrap;
+      font-size: 14px;
+      font-weight: 600;
+      color: #4B4B4B;
     }
 
     .toolbar input,
     .toolbar select {
-      width: 90px;
+      width: 100px;
     }
+
+    .toolbar-buttons {
+      margin-left: auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    /* Кнопки */
+
+    button {
+      font-family: "Montserrat", "Inter", sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      text-transform: none;
+      padding: 10px 16px;
+      border-radius: 18px;
+      border: 2px solid var(--white);
+      color: var(--text);
+      background: linear-gradient(180deg, #FFF3D6, #FFE7B8);
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      transition:
+        transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow 0.18s ease,
+        filter 0.18s ease;
+    }
+
+    button:hover {
+      transform: translateY(-4px) scale(1.03);
+      box-shadow: var(--shadow-hover);
+      filter: saturate(1.05);
+    }
+
+    button:active {
+      transform: translateY(0) scale(0.98);
+    }
+
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible {
+      outline: 3px solid rgba(133, 208, 124, 0.45);
+      outline-offset: 2px;
+    }
+
+    #saveBtn {
+      background: linear-gradient(180deg, #D8F1FF, #BFE3FF);
+    }
+
+    #loadBtn {
+      background: linear-gradient(180deg, #DFF8E6, #C4EDD4);
+    }
+
+    #resetBtn {
+      background: linear-gradient(180deg, #FFE1EC, #FFC7DE);
+    }
+
+    #generateBtn {
+      background: linear-gradient(180deg, #C9F3B9, #A9E8A0);
+    }
+
+    .icon-btn {
+      width: 38px;
+      height: 38px;
+      padding: 0;
+      border-radius: 14px;
+      font-size: 18px;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(180deg, #FFF7E8, #F6EBD2);
+    }
+
+    /* Поля ввода */
+
+    input,
+    select {
+      font-family: "Inter", Arial, sans-serif;
+      font-size: 15px;
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 2px solid var(--white);
+      background: #FFFDF7;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.7),
+        0 6px 14px rgba(70, 60, 40, 0.08);
+    }
+
+    /* Подсказки */
+
+    #hintBar {
+      margin: 16px;
+      padding: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: var(--card);
+      border-radius: var(--radius-big);
+      border: 2px solid var(--white);
+      box-shadow: var(--shadow);
+    }
+
+    .hint-content {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .hint-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 2px solid var(--white);
+      background: linear-gradient(180deg, #FFF6E7, #F6F1DE);
+      box-shadow: var(--shadow);
+      font-weight: 600;
+      font-size: 14px;
+      transition:
+        transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow 0.18s ease;
+    }
+
+    .hint-pill:hover {
+      transform: translateY(-3px) scale(1.03);
+      box-shadow: var(--shadow-hover);
+    }
+
+    /* Раскладка */
 
     .layout {
       display: grid;
-      grid-template-columns: 260px minmax(0, 1fr) 340px;
-      gap: 12px;
-      padding: 12px;
-      height: calc(100vh - 64px);
+      gap: 16px;
+      padding: 0 16px 16px;
+      grid-template-columns: 1fr;
+    }
+
+    @media (min-width: 1024px) {
+      .layout {
+        grid-template-columns: 300px minmax(0, 1fr) 360px;
+        height: calc(100vh - 190px);
+      }
     }
 
     .side {
-      background: white;
-      border: 1px solid #d7e0d7;
-      border-radius: 12px;
-      padding: 12px;
+      background: var(--card);
+      border-radius: var(--radius-big);
+      border: 2px solid var(--white);
+      box-shadow: var(--shadow);
+      padding: 16px;
       overflow: auto;
-    }
-
-    .side h3 {
-      margin: 0 0 10px;
-      font-size: 15px;
     }
 
     .palette-buttons {
       display: grid;
-      gap: 8px;
+      gap: 10px;
       margin-bottom: 16px;
+    }
+
+    .add-object {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      text-align: left;
+      border-radius: var(--radius-card);
+      background: linear-gradient(180deg, #FDF7E7, #F1F7DF);
+      font-size: 16px;
     }
 
     .object-list {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 10px;
     }
 
     .list-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
       text-align: left;
-      background: #fafafa;
-      border: 1px solid #d7e0d7;
-      border-radius: 8px;
-      padding: 8px;
-      font-size: 12px;
-      line-height: 1.35;
+      border-radius: var(--radius-card);
+      background: linear-gradient(180deg, #FFF9EE, #F4F6DF);
+      font-size: 14px;
+      font-family: "Montserrat", "Inter", sans-serif;
+      font-weight: 600;
     }
 
     .list-item.selected {
-      border-color: #1976d2;
-      background: #e3f2fd;
+      background: linear-gradient(180deg, #EFFFF4, #DFF8E3);
+      box-shadow:
+        0 0 0 3px rgba(134, 214, 151, 0.35),
+        var(--shadow);
     }
+
+    .list-item::before,
+    .object::before {
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    /* Холст */
 
     .canvas-wrap {
       position: relative;
-      overflow: auto;
+      border-radius: var(--radius-huge);
+      border: 2px solid var(--white);
+      box-shadow: var(--shadow);
       padding: 16px;
-      background: #eef6ee;
-      border: 1px solid #d7e0d7;
-      border-radius: 12px;
+      overflow: auto;
+      min-height: 380px;
+      background:
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.2)),
+        linear-gradient(135deg, #F5FBEC, #EDF7DD);
     }
 
     .canvas {
       position: relative;
       margin: auto;
-      background: white;
-      border: 2px solid #388e3c;
-      border-radius: 4px;
+      background: #FFFFFF;
+      border-radius: 28px;
+      border: 2px solid var(--white);
+      box-shadow:
+        inset 0 0 0 1px rgba(120, 160, 120, 0.08),
+        0 14px 28px rgba(70, 60, 40, 0.08);
       touch-action: none;
       background-image:
-        linear-gradient(to right, rgba(0, 0, 0, 0.07) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(0, 0, 0, 0.07) 1px, transparent 1px);
+        linear-gradient(to right, rgba(70, 110, 80, 0.06) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(70, 110, 80, 0.06) 1px, transparent 1px);
     }
+
+    /* Объекты на схеме */
 
     .object {
       position: absolute;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
+      gap: 3px;
       padding: 2px;
       overflow: hidden;
-      border: 2px solid rgba(0, 0, 0, 0.35);
-      border-radius: 8px;
-      font-size: 11px;
+      border-radius: 22px;
+      border: 3px solid var(--white);
+      font-family: "Inter", Arial, sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      color: #3B3B3B;
       text-align: center;
       user-select: none;
       touch-action: none;
       cursor: grab;
+      box-shadow: 0 8px 16px rgba(70, 60, 40, 0.15);
+      transition:
+        transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow 0.18s ease;
+      animation: stickerPop 0.28s ease;
+    }
+
+    .object:hover {
+      transform: translateY(-5px) scale(1.05);
+      box-shadow: 0 14px 24px rgba(70, 60, 40, 0.2);
+    }
+
+    .object:active {
+      cursor: grabbing;
+      transform: scale(0.98);
     }
 
     .object.selected {
-      outline: 3px solid #1976d2;
+      outline: 3px solid rgba(126, 214, 123, 0.65);
       z-index: 2;
     }
 
     .object.invalid {
-      outline: 3px solid #d32f2f;
+      outline: 3px solid rgba(255, 110, 136, 0.65);
     }
 
-    .status {
-      position: absolute;
-      left: 12px;
-      bottom: 12px;
-      padding: 6px 10px;
-      border-radius: 8px;
-      background: rgba(0, 0, 0, 0.72);
-      color: white;
-      font-size: 12px;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s ease;
+    /* Пастельные фоны объектов */
+
+    .object[data-type="building"] {
+      background: linear-gradient(180deg, #FFF7EF, #F9E8D4);
     }
 
-    .status.visible {
-      opacity: 1;
+    .object[data-type="greenhouse"] {
+      background: linear-gradient(180deg, #F3FFF5, #DCF2E0);
     }
+
+    .object[data-type="bed"] {
+      background: linear-gradient(180deg, #F9FFE9, #E5F7CF);
+    }
+
+    .object[data-type="tree"] {
+      background: linear-gradient(180deg, #F0FFFB, #D9F0EC);
+    }
+
+    .object[data-type="bush"] {
+      background: linear-gradient(180deg, #FFF9EC, #FDECCB);
+    }
+
+    /* Эмодзи для типов */
+
+    .object[data-type="building"]::before,
+    .list-item[data-type="building"]::before {
+      content: "🏠";
+    }
+
+    .object[data-type="greenhouse"]::before,
+    .list-item[data-type="greenhouse"]::before {
+      content: "🌱";
+    }
+
+    .object[data-type="bed"]::before,
+    .list-item[data-type="bed"]::before {
+      content: "🥕";
+    }
+
+    .object[data-type="tree"]::before,
+    .list-item[data-type="tree"]::before {
+      content: "🌳";
+    }
+
+    .object[data-type="bush"]::before,
+    .list-item[data-type="bush"]::before {
+      content: "🌵";
+    }
+
+    /* Панель настроек */
 
     .panel-header {
       display: flex;
@@ -194,165 +445,178 @@
       margin-bottom: 10px;
     }
 
-    .panel-header h3 {
+    .panel-header .section-title {
       margin: 0;
     }
 
+    .properties-body {
+      font-size: 15px;
+    }
+
     .prop-type {
-      font-size: 12px;
-      color: #567;
+      font-family: "Montserrat", "Inter", sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      color: #6B805C;
       margin-bottom: 8px;
     }
 
     .prop-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
+      gap: 10px;
       margin: 10px 0;
     }
 
     .prop-field {
       display: flex;
       flex-direction: column;
-      gap: 4px;
-      font-size: 12px;
-      margin-bottom: 8px;
+      gap: 5px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #5C5C5C;
+      margin-bottom: 10px;
     }
 
-    .prop-field input,
-    .prop-field select {
+    .properties-body input,
+    .properties-body select {
       width: 100%;
+      font-size: 15px;
     }
 
     .bed-box {
-      border: 1px solid #d7e0d7;
-      border-radius: 10px;
-      padding: 8px;
-      margin: 8px 0;
+      border-radius: var(--radius-card);
+      border: 2px solid var(--white);
+      background: #F3FAE9;
+      padding: 10px;
+      margin: 10px 0;
+      box-shadow: var(--shadow);
     }
 
     .bed-box legend {
-      font-size: 12px;
+      font-family: "Montserrat", "Inter", sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      color: #3E7C4F;
       padding: 0 4px;
-      color: #456;
     }
 
-    .muted {
-      color: #667;
-      font-size: 12px;
+    .btn-danger {
+      width: 100%;
+      margin-top: 10px;
+      background: linear-gradient(180deg, #FFE1EC, #FFC7DE);
     }
+
+    /* Статус */
+
+    .status {
+      position: absolute;
+      left: 14px;
+      bottom: 14px;
+      z-index: 5;
+      border-radius: 999px;
+      padding: 8px 12px;
+      background: rgba(44, 44, 44, 0.82);
+      border: 2px solid rgba(255, 255, 255, 0.35);
+      color: white;
+      font-size: 13px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      box-shadow: var(--shadow);
+    }
+
+    .status.visible {
+      opacity: 1;
+    }
+
+    /* Диалог календаря */
 
     dialog {
-      border: none;
-      border-radius: 12px;
-      padding: 16px;
-      width: min(720px, calc(100vw - 32px));
+      border: 3px solid var(--white);
+      border-radius: 28px;
+      padding: 18px;
+      width: min(760px, calc(100vw - 32px));
       max-height: 80vh;
       overflow: auto;
+      background: linear-gradient(180deg, #FFFFFF, #FFF9EE);
+      box-shadow: var(--shadow-hover);
     }
 
     dialog::backdrop {
-      background: rgba(0, 0, 0, 0.35);
+      background: rgba(60, 50, 30, 0.35);
+      backdrop-filter: blur(3px);
     }
 
-    dialog ol {
+    dialog[open] {
+      animation: stickerPop 0.28s ease;
+    }
+
+    .calendar-list {
+      list-style: none;
       margin: 0;
-      padding-left: 20px;
+      padding: 0;
       display: flex;
       flex-direction: column;
       gap: 10px;
     }
 
-    dialog li small {
-      color: #567;
+    .calendar-list li {
+      border-radius: var(--radius-card);
+      border: 2px solid var(--white);
+      background: linear-gradient(180deg, #FFFDF6, #F5F7E6);
+      box-shadow: var(--shadow);
+      padding: 10px 12px;
     }
 
-    /*
-      Скрытая панель не должна перехватывать клики.
-      На десктопе оставляем её видимой как обычную колонку.
-    */
-    .panel:not(.open) {
-      visibility: hidden;
-      pointer-events: none;
+    .calendar-list small {
+      color: #6F8168;
     }
 
-    @media (min-width: 1101px) {
-      .panel:not(.open) {
-        visibility: visible;
-        pointer-events: auto;
-      }
+    .muted {
+      border-radius: var(--radius-card);
+      border: 2px dashed #D8CBAA;
+      background: #FFF8EC;
+      padding: 10px;
+      color: #7A6C54;
+      font-size: 14px;
     }
 
-    @media (max-width: 1100px) {
-      .layout {
-        grid-template-columns: 240px minmax(0, 1fr);
-        height: calc(100vh - 84px);
+    /* Анимации */
+
+    @keyframes stickerPop {
+      from {
+        opacity: 0;
+        transform: scale(0.92) translateY(4px);
       }
 
-      .panel {
-        position: fixed;
-        right: 0;
-        top: 64px;
-        bottom: 0;
-        width: min(420px, 100%);
-        border-radius: 12px 0 0 12px;
-        transform: translateX(110%);
-        transition: transform 0.2s ease;
-        z-index: 30;
-        box-shadow: -8px 0 24px rgba(0, 0, 0, 0.08);
-      }
-
-      .panel.open {
-        transform: translateX(0);
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
       }
     }
 
-    @media (max-width: 760px) {
-      .toolbar {
-        overflow-x: auto;
-        flex-wrap: nowrap;
-        justify-content: flex-start;
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation: none !important;
+        transition: none !important;
       }
+    }
 
-      .layout {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto minmax(320px, 1fr);
-        height: auto;
-      }
-
-      .palette-buttons {
-        grid-template-columns: repeat(2, 1fr);
-      }
-
-      .side.palette {
-        max-height: 220px;
-      }
-
+    @media (max-width: 1023px) {
       .canvas-wrap {
         min-height: 55vh;
-      }
-
-      .panel {
-        top: auto;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        width: 100%;
-        height: 48vh;
-        border-radius: 16px 16px 0 0;
-        transform: translateY(110%);
-      }
-
-      .panel.open {
-        transform: translateY(0);
       }
     }
   </style>
 </head>
 
 <body>
+
   <header class="toolbar">
-    <strong>Умный садовод</strong>
+    <h1 class="app-title">🌱 Умный садовод</h1>
 
     <label>
       Ширина, м
@@ -374,55 +638,71 @@
       </select>
     </label>
 
-    <button type="button" id="saveBtn">Сохранить</button>
-    <button type="button" id="loadBtn">Загрузить</button>
-    <button type="button" id="resetBtn">Сбросить</button>
-    <button type="button" id="generateBtn" class="primary">Календарь</button>
+    <div class="toolbar-buttons">
+      <button type="button" id="saveBtn">💾 Сохранить</button>
+      <button type="button" id="loadBtn">📂 Загрузить</button>
+      <button type="button" id="resetBtn">🧹 Сбросить</button>
+      <button type="button" id="generateBtn">🗓 Календарь</button>
+    </div>
   </header>
 
-  <div class="layout">
+  <div id="hintBar">
+    <div class="hint-content">
+      <span class="hint-pill">🌿 Добавьте объект</span>
+      <span class="hint-pill">🖐 Перетащите его на участок</span>
+      <span class="hint-pill">⚙️ Кликните, чтобы настроить</span>
+      <span class="hint-pill">💾 Сохраните план в файл</span>
+    </div>
+
+    <button type="button" id="closeHintBtn" class="icon-btn" title="Скрыть подсказки">
+      ✕
+    </button>
+  </div>
+
+  <main class="layout">
+
     <aside class="side palette">
-      <h3>Добавить объект</h3>
+      <h2 class="section-title">Добавить объект</h2>
 
       <div class="palette-buttons">
-        <button type="button" class="add-object" data-type="building">Постройка</button>
-        <button type="button" class="add-object" data-type="greenhouse">Теплица</button>
-        <button type="button" class="add-object" data-type="bed">Грядка</button>
-        <button type="button" class="add-object" data-type="tree">Дерево</button>
-        <button type="button" class="add-object" data-type="bush">Кустарник</button>
+        <button type="button" class="add-object" data-type="building">🏠 Постройка</button>
+        <button type="button" class="add-object" data-type="greenhouse">🌱 Теплица</button>
+        <button type="button" class="add-object" data-type="bed">🥕 Грядка</button>
+        <button type="button" class="add-object" data-type="tree">🌳 Дерево</button>
+        <button type="button" class="add-object" data-type="bush">🌵 Кустарник</button>
       </div>
 
-      <h3>Список объектов</h3>
+      <h2 class="section-title">Объекты</h2>
       <div id="objectList" class="object-list"></div>
     </aside>
 
-    <main class="canvas-wrap" id="canvasWrap">
+    <section id="canvasWrap" class="canvas-wrap">
       <div id="canvas" class="canvas"></div>
       <div id="status" class="status"></div>
-    </main>
+    </section>
 
-    <aside class="side panel" id="panel">
+    <aside id="panel" class="side panel">
       <div class="panel-header">
-        <h3>Настройки объекта</h3>
-        <button type="button" id="closePanelBtn" title="Закрыть">✕</button>
+        <h2 class="section-title">Настройки объекта</h2>
+        <button type="button" id="closePanelBtn" class="icon-btn" title="Закрыть панель">✕</button>
       </div>
 
       <div id="propertiesBody">
         Выберите объект на схеме или в списке.
       </div>
     </aside>
-  </div>
+
+  </main>
 
   <dialog id="calendarDialog">
     <div class="panel-header">
-      <h3>Календарь работ</h3>
-      <button type="button" id="closeCalendarBtn">✕</button>
+      <h2 class="section-title">🗓 Календарь работ</h2>
+      <button type="button" id="closeCalendarBtn" class="icon-btn" title="Закрыть календарь">✕</button>
     </div>
 
-    <ol id="calendarList"></ol>
+    <ol id="calendarList" class="calendar-list"></ol>
   </dialog>
 
-  <!-- Скрытый input для загрузки файла в браузерах без File System Access API -->
   <input
     type="file"
     id="fileInput"
@@ -440,14 +720,6 @@
         bed: 'Грядка',
         tree: 'Дерево',
         bush: 'Кустарник'
-      };
-
-      const TYPE_COLORS = {
-        building: '#d7ccc8',
-        greenhouse: '#c8e6c9',
-        bed: '#dcedc8',
-        tree: '#b2dfdb',
-        bush: '#ffe0b2'
       };
 
       const CROPS = [
@@ -527,7 +799,9 @@
           calendarDialog: document.getElementById('calendarDialog'),
           closeCalendarBtn: document.getElementById('closeCalendarBtn'),
           calendarList: document.getElementById('calendarList'),
-          fileInput: document.getElementById('fileInput')
+          fileInput: document.getElementById('fileInput'),
+          hintBar: document.getElementById('hintBar'),
+          closeHintBtn: document.getElementById('closeHintBtn')
         };
 
         const missing = Object.entries(els)
@@ -539,14 +813,11 @@
           return;
         }
 
-        // localStorage автоматически больше не загружается.
-        // План открывается только вручную через кнопку "Загрузить".
-
         syncPlotInputs();
         bindEvents();
         renderAll();
 
-        console.info('Умный садовод: интерфейс инициализирован. Сохранение и загрузка работают через файл.');
+        console.info('Умный садовод: интерфейс инициализирован.');
       }
 
       function bindEvents() {
@@ -573,13 +844,8 @@
           });
         });
 
-        on(els.saveBtn, 'click', () => {
-          savePlanToFile();
-        });
-
-        on(els.loadBtn, 'click', () => {
-          loadPlanFromFile();
-        });
+        on(els.saveBtn, 'click', savePlanToFile);
+        on(els.loadBtn, 'click', loadPlanFromFile);
 
         on(els.resetBtn, 'click', () => {
           if (!confirm('Очистить текущий план?')) return;
@@ -589,10 +855,7 @@
           fileHandle = null;
 
           renderAll();
-
-          showTemporaryStatus(
-            'План очищен. Нажмите «Загрузить», чтобы открыть сохранённый файл.'
-          );
+          showTemporaryStatus('План очищен. Нажмите «Загрузить», чтобы открыть файл.');
         });
 
         on(els.generateBtn, 'click', generateAndShowCalendar);
@@ -618,6 +881,12 @@
           }
         });
 
+        on(els.closeHintBtn, 'click', () => {
+          if (els.hintBar) {
+            els.hintBar.remove();
+          }
+        });
+
         on(els.canvas, 'pointerdown', (event) => {
           if (event.target === els.canvas) {
             selectedId = null;
@@ -627,11 +896,8 @@
           }
         });
 
-        window.addEventListener('resize', () => {
-          renderCanvas();
-        });
+        window.addEventListener('resize', renderCanvas);
 
-        // Дополнительно: можно перетащить JSON-файл плана прямо в окно программы.
         on(document.body, 'dragover', (event) => {
           event.preventDefault();
         });
@@ -774,6 +1040,7 @@
 
         el.className = 'object';
         el.dataset.id = obj.id;
+        el.dataset.type = obj.type;
 
         if (obj.id === selectedId) {
           el.classList.add('selected');
@@ -787,7 +1054,6 @@
         el.style.top = `${obj.yM * pxPerMeter}px`;
         el.style.width = `${obj.widthM * pxPerMeter}px`;
         el.style.height = `${obj.lengthM * pxPerMeter}px`;
-        el.style.background = TYPE_COLORS[obj.type] || '#eee';
 
         const cultureText = getObjectCultureSummary(obj);
         el.title = `${obj.name}${cultureText ? ` • ${cultureText}` : ''}`;
@@ -816,15 +1082,16 @@
         els.objectList.innerHTML = '';
 
         if (!state.objects.length) {
-          els.objectList.innerHTML = '<div class="muted">Нет объектов</div>';
+          els.objectList.innerHTML = '<div class="muted">Пока пусто. Добавьте первый объект 🌿</div>';
           return;
         }
 
         for (const obj of state.objects) {
           const button = document.createElement('button');
-          button.type = 'button';
 
+          button.type = 'button';
           button.className = 'list-item';
+          button.dataset.type = obj.type;
 
           if (obj.id === selectedId) {
             button.classList.add('selected');
@@ -861,17 +1128,14 @@
       }
 
       function renderProperties() {
-        if (!els || !els.panel || !els.propertiesBody) return;
+        if (!els || !els.propertiesBody) return;
 
         const obj = selectedObject();
 
         if (!obj) {
-          els.panel.classList.remove('open');
           els.propertiesBody.innerHTML = 'Выберите объект на схеме или в списке.';
           return;
         }
-
-        els.panel.classList.add('open');
 
         let specific = '';
 
@@ -985,7 +1249,7 @@
 
           ${specific}
 
-          <button type="button" id="prop-delete" class="btn-danger">Удалить объект</button>
+          <button type="button" id="prop-delete" class="btn-danger">🗑 Удалить объект</button>
         `;
 
         bindPropertyEvents(obj);
@@ -1487,7 +1751,6 @@
       }
 
       async function savePlanToFile() {
-        // Современный вариант для Chrome / Edge / Opera
         if ('showSaveFilePicker' in window) {
           try {
             const handle = await window.showSaveFilePicker({
@@ -1513,7 +1776,6 @@
             return;
           } catch (error) {
             if (error && error.name === 'AbortError') {
-              // Пользователь отменил сохранение
               return;
             }
 
@@ -1524,7 +1786,6 @@
           }
         }
 
-        // Запасной вариант: скачивание файла
         try {
           downloadPlanFallback();
 
@@ -1539,7 +1800,6 @@
       }
 
       async function loadPlanFromFile() {
-        // Современный вариант для Chrome / Edge / Opera
         if ('showOpenFilePicker' in window) {
           try {
             const [handle] = await window.showOpenFilePicker({
@@ -1562,7 +1822,6 @@
             return;
           } catch (error) {
             if (error && error.name === 'AbortError') {
-              // Пользователь отменил выбор файла
               return;
             }
 
@@ -1573,7 +1832,6 @@
           }
         }
 
-        // Запасной вариант: обычный input type="file"
         if (els.fileInput) {
           els.fileInput.click();
         } else {
