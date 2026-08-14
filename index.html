@@ -21,8 +21,6 @@
       --card-green: #EAF5DF;
       --card-beige: #F6EFDD;
 
-      --white: #FFFFFF;
-
       --shadow: 0 10px 20px rgba(70, 60, 40, 0.12);
       --shadow-hover: 0 16px 28px rgba(70, 60, 40, 0.18);
 
@@ -50,6 +48,10 @@
       letter-spacing: 0.2px;
     }
 
+    body.ui-hidden {
+      overflow: hidden;
+    }
+
     h1,
     h2,
     h3,
@@ -65,12 +67,11 @@
     .app-title {
       font-family: "Montserrat", "Inter", sans-serif;
       font-weight: 700;
-      font-size: 30px;
+      font-size: clamp(22px, 4vw, 30px);
       line-height: 1.2;
       letter-spacing: 0.3px;
       margin: 0;
       color: #2F4C33;
-      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
     }
 
     /* Шапка */
@@ -82,11 +83,10 @@
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 12px;
-      padding: 14px 16px;
-      background: rgba(255, 249, 238, 0.92);
+      gap: 10px;
+      padding: 12px 16px;
+      background: rgba(255, 249, 238, 0.94);
       backdrop-filter: blur(8px);
-      border-bottom: 2px solid rgba(255, 255, 255, 0.9);
       box-shadow: 0 8px 18px rgba(70, 60, 40, 0.08);
     }
 
@@ -101,7 +101,7 @@
 
     .toolbar input,
     .toolbar select {
-      width: 100px;
+      width: 92px;
     }
 
     .toolbar-buttons {
@@ -119,8 +119,8 @@
       font-size: 15px;
       text-transform: none;
       padding: 10px 16px;
+      border: none;
       border-radius: 18px;
-      border: 2px solid var(--white);
       color: var(--text);
       background: linear-gradient(180deg, #FFF3D6, #FFE7B8);
       box-shadow: var(--shadow);
@@ -132,7 +132,7 @@
     }
 
     button:hover {
-      transform: translateY(-4px) scale(1.03);
+      transform: translateY(-3px) scale(1.03);
       box-shadow: var(--shadow-hover);
       filter: saturate(1.05);
     }
@@ -144,7 +144,7 @@
     button:focus-visible,
     input:focus-visible,
     select:focus-visible {
-      outline: 3px solid rgba(133, 208, 124, 0.45);
+      outline: 3px solid rgba(133, 208, 124, 0.5);
       outline-offset: 2px;
     }
 
@@ -185,17 +185,19 @@
       font-size: 15px;
       color: var(--text);
       padding: 10px 12px;
+      border: none;
       border-radius: 14px;
-      border: 2px solid var(--white);
       background: #FFFDF7;
       box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.7),
+        inset 0 1px 0 rgba(255, 255, 255, 0.65),
         0 6px 14px rgba(70, 60, 40, 0.08);
     }
 
-    /* Подсказки */
+    /* Блок подсказок */
 
     #hintBar {
+      position: relative;
+      z-index: 5;
       margin: 16px;
       padding: 14px;
       display: flex;
@@ -204,7 +206,6 @@
       gap: 12px;
       background: var(--card);
       border-radius: var(--radius-big);
-      border: 2px solid var(--white);
       box-shadow: var(--shadow);
     }
 
@@ -215,24 +216,110 @@
     }
 
     .hint-pill {
+      position: relative;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      border: 2px solid var(--white);
-      background: linear-gradient(180deg, #FFF6E7, #F6F1DE);
-      box-shadow: var(--shadow);
-      font-weight: 600;
-      font-size: 14px;
-      transition:
-        transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
-        box-shadow 0.18s ease;
+      gap: 8px;
+      cursor: help;
     }
 
+    /* Активная подсказка должна быть выше соседних */
     .hint-pill:hover {
-      transform: translateY(-3px) scale(1.03);
-      box-shadow: var(--shadow-hover);
+      z-index: 60;
+    }
+
+    /* Номер шага: в стиле кнопки, но чуть темнее */
+    .hint-step-number {
+      min-width: 24px;
+      height: 24px;
+      padding: 0 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #FFE4A8, #F5D186);
+      color: #5C451F;
+      font-family: "Montserrat", "Inter", sans-serif;
+      font-weight: 700;
+      font-size: 12px;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.35),
+        0 3px 8px rgba(70, 60, 40, 0.10);
+    }
+
+    /* Всплывающая подсказка снизу кнопки */
+    .hint-pill::after {
+      content: attr(data-tip);
+      position: absolute;
+      top: calc(100% + 10px);
+      bottom: auto;
+      left: 50%;
+      transform: translateX(-50%) translateY(-4px);
+
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+
+      background: rgba(255, 253, 247, 0.96);
+      color: #4B4B4B;
+      border: 1px solid rgba(121, 96, 62, 0.14);
+      box-shadow: 0 12px 22px rgba(70, 60, 40, 0.16);
+
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1.35;
+      text-align: center;
+
+      padding: 7px 10px;
+      border-radius: 10px;
+
+      width: max-content;
+      max-width: 240px;
+      white-space: normal;
+
+      transition:
+        opacity 0.16s ease,
+        transform 0.16s ease,
+        visibility 0.16s ease;
+
+      z-index: 80;
+    }
+
+    /* Стрелка подсказки снизу кнопки */
+    .hint-pill::before {
+      content: "";
+      position: absolute;
+      top: calc(100% + 4px);
+      bottom: auto;
+      left: 50%;
+      transform: translateX(-50%) translateY(-4px);
+
+      width: 0;
+      height: 0;
+
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-top: 0;
+      border-bottom: 6px solid rgba(255, 253, 247, 0.96);
+
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+
+      transition:
+        opacity 0.16s ease,
+        transform 0.16s ease,
+        visibility 0.16s ease;
+
+      z-index: 80;
+    }
+
+    /* Показываем подсказку только при наведении */
+    .hint-pill:hover::after,
+    .hint-pill:hover::before {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0);
     }
 
     /* Раскладка */
@@ -254,7 +341,6 @@
     .side {
       background: var(--card);
       border-radius: var(--radius-big);
-      border: 2px solid var(--white);
       box-shadow: var(--shadow);
       padding: 16px;
       overflow: auto;
@@ -303,9 +389,8 @@
         var(--shadow);
     }
 
-    .list-item::before,
-    .object::before {
-      font-size: 18px;
+    .list-item::before {
+      font-size: 16px;
       line-height: 1;
     }
 
@@ -314,7 +399,6 @@
     .canvas-wrap {
       position: relative;
       border-radius: var(--radius-huge);
-      border: 2px solid var(--white);
       box-shadow: var(--shadow);
       padding: 16px;
       overflow: auto;
@@ -329,7 +413,6 @@
       margin: auto;
       background: #FFFFFF;
       border-radius: 28px;
-      border: 2px solid var(--white);
       box-shadow:
         inset 0 0 0 1px rgba(120, 160, 120, 0.08),
         0 14px 28px rgba(70, 60, 40, 0.08);
@@ -339,37 +422,40 @@
         linear-gradient(to bottom, rgba(70, 110, 80, 0.06) 1px, transparent 1px);
     }
 
-    /* Объекты на схеме */
+    /* Объекты на схеме: эмодзи, подсказки и цветная обводка */
 
     .object {
       position: absolute;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 3px;
-      padding: 2px;
-      overflow: hidden;
-      border-radius: 22px;
-      border: 3px solid var(--white);
-      font-family: "Inter", Arial, sans-serif;
-      font-size: 12px;
-      font-weight: 600;
-      color: #3B3B3B;
-      text-align: center;
+      overflow: visible;
+      border: 2px solid rgba(0, 0, 0, 0.12);
+      background: #FFFFFF;
+      box-shadow: 0 8px 16px rgba(70, 60, 40, 0.12);
+      border-radius: 18px;
+      line-height: 1;
+      color: #2C2C2C;
+      font-family:
+        "Inter",
+        "Segoe UI Emoji",
+        "Apple Color Emoji",
+        "Noto Color Emoji",
+        sans-serif;
       user-select: none;
       touch-action: none;
       cursor: grab;
-      box-shadow: 0 8px 16px rgba(70, 60, 40, 0.15);
+      animation: stickerPop 0.28s ease;
       transition:
         transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
-        box-shadow 0.18s ease;
-      animation: stickerPop 0.28s ease;
+        box-shadow 0.18s ease,
+        background-color 0.18s ease,
+        border-color 0.18s ease;
     }
 
     .object:hover {
-      transform: translateY(-5px) scale(1.05);
-      box-shadow: 0 14px 24px rgba(70, 60, 40, 0.2);
+      transform: translateY(-4px) scale(1.07);
+      box-shadow: 0 12px 22px rgba(70, 60, 40, 0.18);
     }
 
     .object:active {
@@ -377,60 +463,66 @@
       transform: scale(0.98);
     }
 
-    .object.selected {
-      outline: 3px solid rgba(126, 214, 123, 0.65);
-      z-index: 2;
-    }
-
-    .object.invalid {
-      outline: 3px solid rgba(255, 110, 136, 0.65);
-    }
-
-    /* Пастельные фоны объектов */
+    /* Цвет и обводка для типов объектов */
 
     .object[data-type="building"] {
       background: linear-gradient(180deg, #FFF7EF, #F9E8D4);
+      border-color: #D9B48F;
     }
 
     .object[data-type="greenhouse"] {
       background: linear-gradient(180deg, #F3FFF5, #DCF2E0);
+      border-color: #9CCFA8;
     }
 
     .object[data-type="bed"] {
       background: linear-gradient(180deg, #F9FFE9, #E5F7CF);
+      border-color: #B0D37E;
     }
 
     .object[data-type="tree"] {
       background: linear-gradient(180deg, #F0FFFB, #D9F0EC);
+      border-color: #96C9C1;
     }
 
     .object[data-type="bush"] {
       background: linear-gradient(180deg, #FFF9EC, #FDECCB);
+      border-color: #E2BE88;
     }
 
-    /* Эмодзи для типов */
+    /* Выбранный объект */
 
-    .object[data-type="building"]::before,
+    .object.selected {
+      box-shadow:
+        0 0 0 3px rgba(84, 190, 116, 0.30),
+        0 10px 18px rgba(70, 60, 40, 0.16);
+    }
+
+    /* Невалидное размещение */
+
+    .object.invalid {
+      border-color: #F07281;
+      background: rgba(255, 59, 48, 0.10);
+    }
+
+    /* Эмодзи для списка объектов */
+
     .list-item[data-type="building"]::before {
       content: "🏠";
     }
 
-    .object[data-type="greenhouse"]::before,
     .list-item[data-type="greenhouse"]::before {
       content: "🌱";
     }
 
-    .object[data-type="bed"]::before,
     .list-item[data-type="bed"]::before {
       content: "🥕";
     }
 
-    .object[data-type="tree"]::before,
     .list-item[data-type="tree"]::before {
       content: "🌳";
     }
 
-    .object[data-type="bush"]::before,
     .list-item[data-type="bush"]::before {
       content: "🌵";
     }
@@ -486,7 +578,6 @@
 
     .bed-box {
       border-radius: var(--radius-card);
-      border: 2px solid var(--white);
       background: #F3FAE9;
       padding: 10px;
       margin: 10px 0;
@@ -517,7 +608,6 @@
       border-radius: 999px;
       padding: 8px 12px;
       background: rgba(44, 44, 44, 0.82);
-      border: 2px solid rgba(255, 255, 255, 0.35);
       color: white;
       font-size: 13px;
       opacity: 0;
@@ -533,7 +623,7 @@
     /* Диалог календаря */
 
     dialog {
-      border: 3px solid var(--white);
+      border: none;
       border-radius: 28px;
       padding: 18px;
       width: min(760px, calc(100vw - 32px));
@@ -563,7 +653,6 @@
 
     .calendar-list li {
       border-radius: var(--radius-card);
-      border: 2px solid var(--white);
       background: linear-gradient(180deg, #FFFDF6, #F5F7E6);
       box-shadow: var(--shadow);
       padding: 10px 12px;
@@ -575,11 +664,58 @@
 
     .muted {
       border-radius: var(--radius-card);
-      border: 2px dashed #D8CBAA;
       background: #FFF8EC;
       padding: 10px;
       color: #7A6C54;
       font-size: 14px;
+      box-shadow: var(--shadow);
+    }
+
+    /* Кнопка мобильного режима */
+
+    .ui-toggle-btn {
+      position: fixed;
+      right: 14px;
+      bottom: 14px;
+      z-index: 70;
+      padding: 12px 16px;
+      border: none;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #C9F3B9, #A9E8A0);
+      box-shadow: 0 14px 26px rgba(70, 60, 40, 0.2);
+      font-family: "Montserrat", "Inter", sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .ui-toggle-btn:hover {
+      transform: translateY(-3px) scale(1.03);
+    }
+
+    /* Скрытый режим: оставляем только схему */
+
+    body.ui-hidden .toolbar,
+    body.ui-hidden #hintBar,
+    body.ui-hidden .palette,
+    body.ui-hidden .panel {
+      display: none;
+    }
+
+    body.ui-hidden .layout {
+      display: block;
+      padding: 0;
+      height: 100vh;
+      height: 100dvh;
+    }
+
+    body.ui-hidden .canvas-wrap {
+      position: fixed;
+      inset: 0;
+      border-radius: 0;
+      padding: 8px;
+      min-height: 100vh;
+      min-height: 100dvh;
+      z-index: 10;
     }
 
     /* Анимации */
@@ -605,9 +741,46 @@
       }
     }
 
+    /* Мобильная адаптация */
+
     @media (max-width: 1023px) {
+      .toolbar {
+        padding: 10px 12px;
+        gap: 8px;
+      }
+
+      .toolbar label {
+        font-size: 12px;
+      }
+
+      .toolbar input,
+      .toolbar select {
+        width: 76px;
+        padding: 8px 10px;
+      }
+
+      .toolbar-buttons {
+        width: 100%;
+        margin-left: 0;
+        justify-content: flex-start;
+      }
+
       .canvas-wrap {
         min-height: 55vh;
+      }
+
+      #hintBar {
+        margin: 12px;
+        padding: 12px;
+      }
+
+      .layout {
+        padding: 0 12px 12px;
+        gap: 12px;
+      }
+
+      .hint-pill::after {
+        max-width: 180px;
       }
     }
   </style>
@@ -648,10 +821,45 @@
 
   <div id="hintBar">
     <div class="hint-content">
-      <span class="hint-pill">🌿 Добавьте объект</span>
-      <span class="hint-pill">🖐 Перетащите его на участок</span>
-      <span class="hint-pill">⚙️ Кликните, чтобы настроить</span>
-      <span class="hint-pill">💾 Сохраните план в файл</span>
+      <button
+        type="button"
+        class="hint-pill"
+        data-tip="Шаг 1 из 4: добавьте объект на участок"
+        aria-label="Шаг 1 из 4: добавьте объект на участок"
+      >
+        <span class="hint-step-number">1</span>
+        <span>🌿 Добавьте объект</span>
+      </button>
+
+      <button
+        type="button"
+        class="hint-pill"
+        data-tip="Шаг 2 из 4: перетащите объект на участок"
+        aria-label="Шаг 2 из 4: перетащите объект на участок"
+      >
+        <span class="hint-step-number">2</span>
+        <span>🖐 Перетащите его на участок</span>
+      </button>
+
+      <button
+        type="button"
+        class="hint-pill"
+        data-tip="Шаг 3 из 4: кликните по объекту, чтобы настроить его параметры"
+        aria-label="Шаг 3 из 4: кликните по объекту, чтобы настроить его параметры"
+      >
+        <span class="hint-step-number">3</span>
+        <span>⚙️ Кликните, чтобы настроить</span>
+      </button>
+
+      <button
+        type="button"
+        class="hint-pill"
+        data-tip="Шаг 4 из 4: сохраните план в файл"
+        aria-label="Шаг 4 из 4: сохраните план в файл"
+      >
+        <span class="hint-step-number">4</span>
+        <span>💾 Сохраните план в файл</span>
+      </button>
     </div>
 
     <button type="button" id="closeHintBtn" class="icon-btn" title="Скрыть подсказки">
@@ -710,6 +918,10 @@
     hidden
   />
 
+  <button type="button" id="uiToggleBtn" class="ui-toggle-btn">
+    🙈 Скрыть параметры
+  </button>
+
   <script>
     (function () {
       'use strict';
@@ -720,6 +932,14 @@
         bed: 'Грядка',
         tree: 'Дерево',
         bush: 'Кустарник'
+      };
+
+      const TYPE_EMOJI = {
+        building: '🏠',
+        greenhouse: '🌱',
+        bed: '🥕',
+        tree: '🌳',
+        bush: '🌵'
       };
 
       const CROPS = [
@@ -801,7 +1021,8 @@
           calendarList: document.getElementById('calendarList'),
           fileInput: document.getElementById('fileInput'),
           hintBar: document.getElementById('hintBar'),
-          closeHintBtn: document.getElementById('closeHintBtn')
+          closeHintBtn: document.getElementById('closeHintBtn'),
+          uiToggleBtn: document.getElementById('uiToggleBtn')
         };
 
         const missing = Object.entries(els)
@@ -885,6 +1106,24 @@
           if (els.hintBar) {
             els.hintBar.remove();
           }
+        });
+
+        // Убираем фокус с кнопок-подсказок после клика,
+        // чтобы активной оставалась только подсказка под курсором.
+        document.querySelectorAll('.hint-pill').forEach(button => {
+          on(button, 'click', () => {
+            button.blur();
+          });
+        });
+
+        on(els.uiToggleBtn, 'click', () => {
+          const hidden = document.body.classList.toggle('ui-hidden');
+
+          els.uiToggleBtn.textContent = hidden
+            ? '⚙️ Показать параметры'
+            : '🙈 Скрыть параметры';
+
+          requestAnimationFrame(renderCanvas);
         });
 
         on(els.canvas, 'pointerdown', (event) => {
@@ -1056,8 +1295,22 @@
         el.style.height = `${obj.lengthM * pxPerMeter}px`;
 
         const cultureText = getObjectCultureSummary(obj);
-        el.title = `${obj.name}${cultureText ? ` • ${cultureText}` : ''}`;
-        el.textContent = obj.name;
+        const tooltip = `${obj.name}${cultureText ? ` • ${cultureText}` : ''}`;
+
+        el.title = tooltip;
+        el.setAttribute('aria-label', tooltip);
+
+        // Показываем только эмодзи.
+        // Название объекта и культура остаются в подсказке.
+        el.textContent = TYPE_EMOJI[obj.type] || '🌿';
+
+        // Подбираем размер эмодзи под размер объекта на схеме.
+        const minSidePx = Math.min(
+          obj.widthM * pxPerMeter,
+          obj.lengthM * pxPerMeter
+        );
+
+        el.style.fontSize = `${clamp(minSidePx * 0.55, 14, 32)}px`;
 
         el.addEventListener('pointerdown', (event) => {
           event.stopPropagation();
