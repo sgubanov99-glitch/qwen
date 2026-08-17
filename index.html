@@ -223,12 +223,10 @@
       cursor: help;
     }
 
-    /* Активная подсказка должна быть выше соседних */
     .hint-pill:hover {
       z-index: 60;
     }
 
-    /* Номер шага: в стиле кнопки, но чуть темнее */
     .hint-step-number {
       min-width: 24px;
       height: 24px;
@@ -247,7 +245,8 @@
         0 3px 8px rgba(70, 60, 40, 0.10);
     }
 
-    /* Всплывающая подсказка снизу кнопки */
+    /* Подсказка снизу, светлая, только при наведении */
+
     .hint-pill::after {
       content: attr(data-tip);
       position: absolute;
@@ -285,7 +284,6 @@
       z-index: 80;
     }
 
-    /* Стрелка подсказки снизу кнопки */
     .hint-pill::before {
       content: "";
       position: absolute;
@@ -314,7 +312,6 @@
       z-index: 80;
     }
 
-    /* Показываем подсказку только при наведении */
     .hint-pill:hover::after,
     .hint-pill:hover::before {
       opacity: 1;
@@ -394,6 +391,26 @@
       line-height: 1;
     }
 
+    .list-item[data-type="building"]::before {
+      content: "🏠";
+    }
+
+    .list-item[data-type="greenhouse"]::before {
+      content: "🌱";
+    }
+
+    .list-item[data-type="bed"]::before {
+      content: "🥕";
+    }
+
+    .list-item[data-type="tree"]::before {
+      content: "🌳";
+    }
+
+    .list-item[data-type="bush"]::before {
+      content: "🌵";
+    }
+
     /* Холст */
 
     .canvas-wrap {
@@ -422,7 +439,7 @@
         linear-gradient(to bottom, rgba(70, 110, 80, 0.06) 1px, transparent 1px);
     }
 
-    /* Объекты на схеме: эмодзи, подсказки и цветная обводка */
+    /* Объекты на схеме */
 
     .object {
       position: absolute;
@@ -463,8 +480,6 @@
       transform: scale(0.98);
     }
 
-    /* Цвет и обводка для типов объектов */
-
     .object[data-type="building"] {
       background: linear-gradient(180deg, #FFF7EF, #F9E8D4);
       border-color: #D9B48F;
@@ -490,41 +505,15 @@
       border-color: #E2BE88;
     }
 
-    /* Выбранный объект */
-
     .object.selected {
       box-shadow:
         0 0 0 3px rgba(84, 190, 116, 0.30),
         0 10px 18px rgba(70, 60, 40, 0.16);
     }
 
-    /* Невалидное размещение */
-
     .object.invalid {
       border-color: #F07281;
       background: rgba(255, 59, 48, 0.10);
-    }
-
-    /* Эмодзи для списка объектов */
-
-    .list-item[data-type="building"]::before {
-      content: "🏠";
-    }
-
-    .list-item[data-type="greenhouse"]::before {
-      content: "🌱";
-    }
-
-    .list-item[data-type="bed"]::before {
-      content: "🥕";
-    }
-
-    .list-item[data-type="tree"]::before {
-      content: "🌳";
-    }
-
-    .list-item[data-type="bush"]::before {
-      content: "🌵";
     }
 
     /* Панель настроек */
@@ -692,7 +681,7 @@
       transform: translateY(-3px) scale(1.03);
     }
 
-    /* Скрытый режим: оставляем только схему */
+    /* Скрытый режим */
 
     body.ui-hidden .toolbar,
     body.ui-hidden #hintBar,
@@ -781,6 +770,220 @@
 
       .hint-pill::after {
         max-width: 180px;
+      }
+    }
+
+    /* ============================== */
+    /* Чат-бот                        */
+    /* ============================== */
+
+    .sg-chat-toggle {
+      position: fixed;
+      right: 14px;
+      bottom: 78px;
+      z-index: 80;
+      border: none;
+      border-radius: 999px;
+      padding: 12px 16px;
+      background: linear-gradient(180deg, #C9F3B9, #A9E8A0);
+      box-shadow: 0 14px 26px rgba(70, 60, 40, 0.20);
+      font-family: "Montserrat", "Inter", sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      color: #274A22;
+      cursor: pointer;
+      transition:
+        transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow 0.18s ease;
+    }
+
+    .sg-chat-toggle:hover {
+      transform: translateY(-3px) scale(1.03);
+      box-shadow: 0 18px 32px rgba(70, 60, 40, 0.24);
+    }
+
+    .sg-chat-panel {
+      position: fixed;
+      right: 14px;
+      bottom: 132px;
+      width: min(400px, calc(100vw - 28px));
+      height: min(560px, calc(100vh - 190px));
+      z-index: 85;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border-radius: var(--radius-big);
+      background: var(--card);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .sg-chat-panel[hidden] {
+      display: none;
+    }
+
+    .sg-chat-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 12px;
+      background: linear-gradient(180deg, rgba(234, 245, 223, 0.92), rgba(246, 239, 221, 0.92));
+      border-bottom: 1px solid rgba(90, 100, 70, 0.12);
+    }
+
+    .sg-chat-header strong {
+      font-family: "Montserrat", "Inter", sans-serif;
+      font-size: 16px;
+      color: #274A22;
+    }
+
+    .sg-chat-header-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .sg-chat-icon-btn {
+      width: 34px;
+      height: 34px;
+      border: none;
+      border-radius: 12px;
+      background: #FFFFFF;
+      box-shadow: 0 6px 14px rgba(70, 60, 40, 0.12);
+      font-size: 16px;
+      cursor: pointer;
+      transition: transform 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    .sg-chat-icon-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 9px 18px rgba(70, 60, 40, 0.16);
+    }
+
+    .sg-chat-messages {
+      flex: 1;
+      overflow: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.42)),
+        var(--bg);
+    }
+
+    .sg-chat-msg {
+      max-width: 92%;
+      padding: 9px 11px;
+      border-radius: 16px;
+      font-size: 13.5px;
+      line-height: 1.45;
+      box-shadow: 0 6px 14px rgba(70, 60, 40, 0.08);
+      animation: sgChatPop 0.22s ease;
+    }
+
+    .sg-chat-msg.bot {
+      align-self: flex-start;
+      background: #F5F8EC;
+      border: 1px solid rgba(120, 140, 90, 0.14);
+    }
+
+    .sg-chat-msg.user {
+      align-self: flex-end;
+      background: #E9F4FF;
+      border: 1px solid rgba(70, 130, 180, 0.14);
+    }
+
+    .sg-chat-quick {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 10px;
+      border-top: 1px solid rgba(90, 100, 70, 0.12);
+      background: #FFFDF6;
+    }
+
+    .sg-chat-quick button,
+    .sg-chat-chip {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      background: linear-gradient(180deg, #FFF6DF, #F8EBC8);
+      color: #4A3B19;
+      box-shadow: 0 6px 12px rgba(70, 60, 40, 0.10);
+      cursor: pointer;
+      transition: transform 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    .sg-chat-quick button:hover,
+    .sg-chat-chip:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 9px 16px rgba(70, 60, 40, 0.14);
+    }
+
+    .sg-chat-input-row {
+      display: flex;
+      gap: 6px;
+      padding: 10px;
+      border-top: 1px solid rgba(90, 100, 70, 0.12);
+      background: #FFFDF6;
+    }
+
+    .sg-chat-input-row input {
+      flex: 1;
+      border: none;
+      border-radius: 14px;
+      padding: 10px 12px;
+      background: #FFFFFF;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.7),
+        0 5px 12px rgba(70, 60, 40, 0.07);
+      font-size: 14px;
+    }
+
+    .sg-chat-input-row button {
+      border: none;
+      border-radius: 14px;
+      padding: 10px 14px;
+      background: linear-gradient(180deg, #C2EBA8, #99D77F);
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    .sg-chat-input-row button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(70, 60, 40, 0.14);
+    }
+
+    .sg-chat-plant-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    @keyframes sgChatPop {
+      from {
+        opacity: 0;
+        transform: translateY(5px) scale(0.98);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @media (max-width: 700px) {
+      .sg-chat-toggle {
+        bottom: 74px;
+      }
+
+      .sg-chat-panel {
+        bottom: 128px;
+        height: min(58vh, 520px);
       }
     }
   </style>
@@ -922,6 +1125,48 @@
     🙈 Скрыть параметры
   </button>
 
+  <!-- ============================== -->
+  <!-- Чат-бот                        -->
+  <!-- ============================== -->
+
+  <button id="sgChatToggle" class="sg-chat-toggle" type="button">
+    🤖 Советчик
+  </button>
+
+  <section id="sgChatPanel" class="sg-chat-panel" hidden>
+    <div class="sg-chat-header">
+      <strong>🌱 Советчик садовода</strong>
+
+      <div class="sg-chat-header-actions">
+        <button id="sgChatLoadBtn" class="sg-chat-icon-btn" type="button" title="Загрузить plants.json">
+          📂
+        </button>
+        <button id="sgChatCloseBtn" class="sg-chat-icon-btn" type="button" title="Закрыть чат">
+          ✕
+        </button>
+      </div>
+    </div>
+
+    <div id="sgChatMessages" class="sg-chat-messages"></div>
+    <div id="sgChatQuick" class="sg-chat-quick"></div>
+
+    <div class="sg-chat-input-row">
+      <input
+        id="sgChatInput"
+        type="text"
+        placeholder="Например: яблоня, укроп, виноград"
+      />
+      <button id="sgChatSendBtn" type="button">➤</button>
+    </div>
+
+    <input
+      id="sgChatFileInput"
+      type="file"
+      accept=".json,application/json"
+      hidden
+    />
+  </section>
+
   <script>
     (function () {
       'use strict';
@@ -998,7 +1243,10 @@
         }
       }
 
-      ready(initApp);
+      ready(function () {
+        initApp();
+        initChat();
+      });
 
       function initApp() {
         els = {
@@ -1035,13 +1283,13 @@
         }
 
         syncPlotInputs();
-        bindEvents();
+        bindAppEvents();
         renderAll();
 
-        console.info('Умный садовод: интерфейс инициализирован.');
+        console.info('Умный садовод: основной интерфейс инициализирован.');
       }
 
-      function bindEvents() {
+      function bindAppEvents() {
         on(els.plotWidth, 'change', () => {
           state.plot.widthM = clamp(Number(els.plotWidth.value) || 12, 1, 500);
           clampAllObjects();
@@ -1108,8 +1356,6 @@
           }
         });
 
-        // Убираем фокус с кнопок-подсказок после клика,
-        // чтобы активной оставалась только подсказка под курсором.
         document.querySelectorAll('.hint-pill').forEach(button => {
           on(button, 'click', () => {
             button.blur();
@@ -1136,32 +1382,12 @@
         });
 
         window.addEventListener('resize', renderCanvas);
-
-        on(document.body, 'dragover', (event) => {
-          event.preventDefault();
-        });
-
-        on(document.body, 'drop', async (event) => {
-          event.preventDefault();
-
-          const file = event.dataTransfer.files && event.dataTransfer.files[0];
-
-          if (!file) return;
-
-          const isJson =
-            file.type === 'application/json' ||
-            file.name.toLowerCase().endsWith('.json');
-
-          if (isJson) {
-            await applyPlanFile(file);
-          }
-        });
       }
 
       function createObject(type) {
         if (!TYPE_LABELS[type]) {
           console.warn('Неизвестный тип объекта:', type);
-          return;
+          return null;
         }
 
         const defaults = {
@@ -1206,6 +1432,8 @@
         selectedId = obj.id;
 
         renderAll();
+
+        return obj;
       }
 
       function findFreeSpot(obj) {
@@ -1295,16 +1523,13 @@
         el.style.height = `${obj.lengthM * pxPerMeter}px`;
 
         const cultureText = getObjectCultureSummary(obj);
-        const tooltip = `${obj.name}${cultureText ? ` • ${cultureText}` : ''}`;
+        const tooltip = obj.tooltip || `${obj.name}${cultureText ? ` • ${cultureText}` : ''}`;
 
         el.title = tooltip;
         el.setAttribute('aria-label', tooltip);
 
-        // Показываем только эмодзи.
-        // Название объекта и культура остаются в подсказке.
         el.textContent = TYPE_EMOJI[obj.type] || '🌿';
 
-        // Подбираем размер эмодзи под размер объекта на схеме.
         const minSidePx = Math.min(
           obj.widthM * pxPerMeter,
           obj.lengthM * pxPerMeter
@@ -2215,11 +2440,20 @@
       }
 
       function cultureOptions(selected, list) {
+        const items = Array.isArray(list) ? [...list] : [];
+
+        if (selected && !items.includes(selected)) {
+          items.unshift(selected);
+        }
+
         const options = ['<option value="">— не выбрана —</option>'];
 
-        for (const item of list) {
+        for (const item of items) {
           const selectedAttr = item === selected ? 'selected' : '';
-          options.push(`<option value="${escapeHtml(item)}" ${selectedAttr}>${escapeHtml(item)}</option>`);
+
+          options.push(
+            `<option value="${escapeHtml(item)}" ${selectedAttr}>${escapeHtml(item)}</option>`
+          );
         }
 
         return options.join('');
@@ -2316,6 +2550,889 @@
         }
 
         element.addEventListener(eventName, handler, options);
+      }
+
+      /* =============================== */
+      /* Интеграция редактора с чат-ботом */
+      /* =============================== */
+
+      function mapPlantTypeToObjectType(plantType) {
+        const type = String(plantType || '').toLowerCase();
+
+        if (type.includes('дерево')) {
+          return 'tree';
+        }
+
+        if (type.includes('кустарник')) {
+          return 'bush';
+        }
+
+        return 'bed';
+      }
+
+      function ensureCultureInLists(cultureName, objectType) {
+        if (!cultureName) return;
+
+        if (objectType === 'bed' && !CROPS.includes(cultureName)) {
+          CROPS.push(cultureName);
+        }
+
+        if (objectType === 'tree' && !TREE_CULTURES.includes(cultureName)) {
+          TREE_CULTURES.push(cultureName);
+        }
+
+        if (objectType === 'bush' && !BUSH_CULTURES.includes(cultureName)) {
+          BUSH_CULTURES.push(cultureName);
+        }
+      }
+
+      function addPlantFromChat(plant) {
+        try {
+          if (!plant || !plant.name) {
+            console.warn('addPlantFromChat: пустой объект растения', plant);
+            return false;
+          }
+
+          const objectType = mapPlantTypeToObjectType(plant.type);
+
+          const obj = createObject(objectType);
+
+          if (!obj) {
+            throw new Error('Не удалось создать объект на схеме.');
+          }
+
+          obj.name = plant.name;
+
+          if (objectType === 'bed' || objectType === 'tree' || objectType === 'bush') {
+            ensureCultureInLists(plant.name, objectType);
+            obj.culture = plant.name;
+          }
+
+          if (objectType === 'bed') {
+            obj.plantingDate = null;
+          }
+
+          obj.tooltip =
+            `${plant.name}` +
+            `${plant.type ? ` • ${plant.type}` : ''}` +
+            `${plant.sowing_timing ? ` • Посадка: ${plant.sowing_timing}` : ''}` +
+            `${plant.harvest_timing ? ` • Урожай: ${plant.harvest_timing}` : ''}`;
+
+          renderAll();
+          selectObject(obj.id);
+
+          showTemporaryStatus(`Добавлено растение: ${plant.name}`);
+
+          return true;
+        } catch (error) {
+          console.error('Ошибка addPlantFromChat:', error);
+          return false;
+        }
+      }
+
+      window.SmartGardener = window.SmartGardener || {};
+      window.SmartGardener.addPlantFromChat = addPlantFromChat;
+
+      window.SmartGardener.check = function () {
+        return {
+          hasCreateObject: typeof createObject === 'function',
+          hasState: typeof state !== 'undefined',
+          hasRenderAll: typeof renderAll === 'function',
+          hasSelectObject: typeof selectObject === 'function',
+          hasShowTemporaryStatus: typeof showTemporaryStatus === 'function',
+          hasTypeLabels: typeof TYPE_LABELS !== 'undefined',
+          hasCrops: typeof CROPS !== 'undefined'
+        };
+      };
+
+      console.info('SmartGardener API подключён:', window.SmartGardener.check());
+
+      /* ============================== */
+      /* Чат-бот                        */
+      /* ============================== */
+
+      let chatEls = null;
+      let plants = [];
+      let lastTypeFilter = 'all';
+
+      const MONTH_FULL = [
+        'Январь',
+        'Февраль',
+        'Март',
+        'Апрель',
+        'Май',
+        'Июнь',
+        'Июль',
+        'Август',
+        'Сентябрь',
+        'Октябрь',
+        'Ноябрь',
+        'Декабрь'
+      ];
+
+      const MONTH_RE_SRC =
+        '(?:январ|феврал|март|апрел|ма[йяе]|июн|июл|август|сентябр|октябр|ноябр|декабр)';
+
+      function initChat() {
+        chatEls = {
+          toggle: document.getElementById('sgChatToggle'),
+          panel: document.getElementById('sgChatPanel'),
+          close: document.getElementById('sgChatCloseBtn'),
+          loadBtn: document.getElementById('sgChatLoadBtn'),
+          fileInput: document.getElementById('sgChatFileInput'),
+          messages: document.getElementById('sgChatMessages'),
+          quick: document.getElementById('sgChatQuick'),
+          input: document.getElementById('sgChatInput'),
+          sendBtn: document.getElementById('sgChatSendBtn')
+        };
+
+        if (!chatEls.toggle || !chatEls.panel) return;
+
+        bindChatEvents();
+        startChat();
+        loadPlants();
+      }
+
+      function bindChatEvents() {
+        chatEls.toggle.addEventListener('click', () => {
+          chatEls.panel.hidden = !chatEls.panel.hidden;
+
+          if (!chatEls.panel.hidden) {
+            chatEls.input.focus();
+          }
+        });
+
+        chatEls.close.addEventListener('click', () => {
+          chatEls.panel.hidden = true;
+        });
+
+        chatEls.loadBtn.addEventListener('click', () => {
+          chatEls.fileInput.click();
+        });
+
+        chatEls.fileInput.addEventListener('change', async () => {
+          const file = chatEls.fileInput.files && chatEls.fileInput.files[0];
+
+          if (!file) return;
+
+          try {
+            const text = await file.text();
+            const raw = JSON.parse(text);
+
+            plants = normalizePlants(raw);
+
+            addBotMessage(
+              `Файл растений загружен. Найдено культур: <strong>${plants.length}</strong>.`
+            );
+          } catch (error) {
+            console.error(error);
+            addBotMessage('Не удалось прочитать файл. Проверьте, что это корректный JSON.');
+          }
+
+          chatEls.fileInput.value = '';
+        });
+
+        chatEls.sendBtn.addEventListener('click', sendUserInput);
+
+        chatEls.input.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter') {
+            sendUserInput();
+          }
+        });
+
+        chatEls.messages.addEventListener('click', (event) => {
+          const button = event.target.closest('button[data-action]');
+
+          if (!button) return;
+
+          handleChatAction(button.dataset.action, button.dataset.value);
+        });
+
+        chatEls.quick.addEventListener('click', (event) => {
+          const button = event.target.closest('button[data-action]');
+
+          if (!button) return;
+
+          handleChatAction(button.dataset.action, button.dataset.value);
+        });
+      }
+
+      function startChat() {
+        chatEls.messages.innerHTML = '';
+
+        addBotMessage(
+          'Привет! Я помогу подобрать растения из вашей базы и составить сезонный календарь.<br><br>' +
+          'Выберите действие:'
+        );
+
+        setQuickReplies([
+          { label: '🌱 Подобрать растение', action: 'choose_plant' },
+          { label: '🗓 Календарь по растению', action: 'calendar' },
+          { label: 'ℹ️ Справка', action: 'help' }
+        ]);
+      }
+
+      async function loadPlants() {
+        try {
+          const response = await fetch('plants.json');
+
+          if (!response.ok) {
+            throw new Error('HTTP error');
+          }
+
+          const raw = await response.json();
+
+          plants = normalizePlants(raw);
+
+          addBotMessage(
+            `База растений загружена автоматически. Культур в базе: <strong>${plants.length}</strong>.`
+          );
+        } catch (error) {
+          console.warn('Не удалось автоматически загрузить plants.json', error);
+
+          addBotMessage(
+            'Не удалось автоматически загрузить <strong>plants.json</strong>.<br>' +
+            'Если вы открываете сайт через <code>file://</code>, браузер может блокировать fetch.<br><br>' +
+            'Нажмите кнопку <strong>📂</strong> в шапке чата и выберите файл вручную.'
+          );
+        }
+      }
+
+      function handleChatAction(action, value) {
+        if (action === 'start') {
+          startChat();
+          return;
+        }
+
+        if (action === 'help') {
+          showHelp();
+          return;
+        }
+
+        if (action === 'choose_plant') {
+          askPlantType();
+          return;
+        }
+
+        if (action === 'type') {
+          showPlantsByType(value);
+          return;
+        }
+
+        if (action === 'info') {
+          const plant = getPlantByName(value);
+          showPlantInfo(plant);
+          return;
+        }
+
+        if (action === 'calendar') {
+          askCalendarPlant();
+          return;
+        }
+
+        if (action === 'calendar_for') {
+          const plant = getPlantByName(value);
+          showPlantCalendar(plant);
+          return;
+        }
+
+        if (action === 'add_plan') {
+          addPlantToApp(value);
+          return;
+        }
+
+        if (action === 'show_all') {
+          showAllPlants(value);
+          return;
+        }
+      }
+
+      function showHelp() {
+        addBotMessage(
+          'Я понимаю такие действия:<br><br>' +
+          '1. <strong>Подобрать растение</strong> — выбор по типу: дерево, кустарник, овощ, зелень, ягода.<br>' +
+          '2. <strong>Календарь по растению</strong> — сезонные работы для выбранной культуры.<br>' +
+          '3. В поле ввода можно написать название растения, например: <em>яблоня</em>, <em>укроп</em>, <em>виноград</em>.<br><br>' +
+          'Если база растений не загрузилась автоматически, нажмите 📂 и выберите файл <strong>plants.json</strong>.'
+        );
+
+        setQuickReplies([
+          { label: '🏠 В начало', action: 'start' }
+        ]);
+      }
+
+      function askPlantType() {
+        if (!ensurePlantsLoaded()) return;
+
+        addBotMessage('Какой тип растений вас интересует?');
+
+        setQuickReplies([
+          { label: '🌳 Дерево', action: 'type', value: 'дерево' },
+          { label: '🌿 Кустарник', action: 'type', value: 'кустарник' },
+          { label: '🥕 Овощ', action: 'type', value: 'овощ' },
+          { label: '🌱 Зелень', action: 'type', value: 'зелень' },
+          { label: '🍓 Ягода', action: 'type', value: 'ягода' },
+          { label: '📚 Все растения', action: 'type', value: 'all' },
+          { label: '⬅️ Назад', action: 'start' }
+        ]);
+      }
+
+      function showPlantsByType(type) {
+        if (!ensurePlantsLoaded()) return;
+
+        lastTypeFilter = type;
+
+        const list = filterPlantsByType(type);
+
+        if (!list.length) {
+          addBotMessage('По этому запросу ничего не найдено.');
+
+          setQuickReplies([
+            { label: '⬅️ Назад', action: 'choose_plant' },
+            { label: '🏠 В начало', action: 'start' }
+          ]);
+
+          return;
+        }
+
+        addBotMessage(
+          `Найдено растений: <strong>${list.length}</strong>.<br>` +
+          'Нажмите на растение, чтобы посмотреть подробности.'
+        );
+
+        addPlantButtons(list, 'info', 10);
+
+        setQuickReplies([
+          { label: '⬅️ Типы растений', action: 'choose_plant' },
+          { label: '🏠 В начало', action: 'start' }
+        ]);
+      }
+
+      function showAllPlants(targetAction) {
+        if (!ensurePlantsLoaded()) return;
+
+        const list = filterPlantsByType(lastTypeFilter);
+
+        addBotMessage(`Показываю все растения: <strong>${list.length}</strong>.`);
+
+        addPlantButtons(list, targetAction || 'info', 999);
+
+        setQuickReplies([
+          { label: '🏠 В начало', action: 'start' }
+        ]);
+      }
+
+      function askCalendarPlant() {
+        if (!ensurePlantsLoaded()) return;
+
+        addBotMessage(
+          'Выберите растение, для которого нужно построить сезонный календарь.<br>' +
+          'Или введите название растения в поле внизу.'
+        );
+
+        addPlantButtons(plants, 'calendar_for', 10);
+
+        setQuickReplies([
+          { label: 'Показать все', action: 'show_all', value: 'calendar_for' },
+          { label: '🏠 В начало', action: 'start' }
+        ]);
+      }
+
+      function showPlantInfo(plant) {
+        if (!plant) {
+          addBotMessage('Не нашёл такое растение в базе.');
+          return;
+        }
+
+        const care = plant.care || {};
+
+        const diseases = Array.isArray(plant.diseases)
+          ? plant.diseases.join(', ')
+          : '—';
+
+        addBotMessage(
+          `<strong>${escapeHtml(plant.name)}</strong><br><br>` +
+          `<strong>Тип:</strong> ${escapeHtml(plant.type || '—')}<br>` +
+          `<strong>Регион:</strong> ${escapeHtml(plant.region || '—')}<br>` +
+          `<strong>Посадка:</strong> ${escapeHtml(plant.sowing_timing || '—')}<br>` +
+          `<strong>Урожай:</strong> ${escapeHtml(plant.harvest_timing || '—')}<br><br>` +
+
+          `<strong>Уход:</strong><br>` +
+          careLine('Полив', care.watering) +
+          careLine('Удобрения', care.fertilizer) +
+          careLine('Обрезка', care.pruning) +
+          careLine('Особенности', care.other) +
+
+          `<br><strong>Болезни и вредители:</strong> ${escapeHtml(diseases)}`
+        );
+
+        setQuickReplies([
+          { label: '🗓 Календарь', action: 'calendar_for', value: plant.name },
+          { label: '➕ Добавить на схему', action: 'add_plan', value: plant.name },
+          { label: '⬅️ Назад', action: 'choose_plant' },
+          { label: '🏠 В начало', action: 'start' }
+        ]);
+      }
+
+      function showPlantCalendar(plant) {
+        if (!plant) {
+          addBotMessage('Не нашёл такое растение в базе.');
+          return;
+        }
+
+        const tasks = generatePlantCalendar(plant);
+
+        if (!tasks.length) {
+          addBotMessage(
+            `Для растения <strong>${escapeHtml(plant.name)}</strong> ` +
+            'не удалось автоматически выделить месяцы для календаря.<br><br>' +
+            `<strong>Посадка:</strong> ${escapeHtml(plant.sowing_timing || '—')}<br>` +
+            `<strong>Урожай:</strong> ${escapeHtml(plant.harvest_timing || '—')}`
+          );
+        } else {
+          const rows = tasks
+            .map(task => {
+              return `• ${formatTaskDate(task.date)} — ${escapeHtml(task.title)}`;
+            })
+            .join('<br>');
+
+          addBotMessage(
+            `<strong>Сезонный календарь: ${escapeHtml(plant.name)}</strong><br><br>` +
+            rows
+          );
+        }
+
+        setQuickReplies([
+          { label: '⬅️ Информация', action: 'info', value: plant.name },
+          { label: '➕ Добавить на схему', action: 'add_plan', value: plant.name },
+          { label: '🏠 В начало', action: 'start' }
+        ]);
+      }
+
+      function addPlantToApp(name) {
+        const plant = getPlantByName(name);
+
+        if (!plant) {
+          addBotMessage('Не нашёл такое растение в базе.');
+          return;
+        }
+
+        if (
+          window.SmartGardener &&
+          typeof window.SmartGardener.addPlantFromChat === 'function'
+        ) {
+          const success = window.SmartGardener.addPlantFromChat(plant);
+
+          if (success) {
+            addBotMessage(
+              `Растение <strong>${escapeHtml(plant.name)}</strong> добавлено на схему.`
+            );
+
+            setQuickReplies([
+              { label: '🏠 В начало', action: 'start' }
+            ]);
+
+            setTimeout(() => {
+              chatEls.panel.hidden = true;
+            }, 300);
+          } else {
+            addBotMessage(
+              'Не удалось добавить растение на схему.<br>' +
+              'Откройте консоль браузера, чтобы посмотреть ошибку.'
+            );
+
+            setQuickReplies([
+              { label: '🏠 В начало', action: 'start' }
+            ]);
+          }
+
+          return;
+        }
+
+        addBotMessage(
+          `Чтобы добавлять <strong>${escapeHtml(plant.name)}</strong> на схему, ` +
+          'нужно подключить интеграцию чат-бота к редактору.'
+        );
+
+        setQuickReplies([
+          { label: '🏠 В начало', action: 'start' }
+        ]);
+      }
+
+      function sendUserInput() {
+        const text = chatEls.input.value.trim();
+
+        if (!text) return;
+
+        addUserMessage(text);
+
+        chatEls.input.value = '';
+
+        if (!ensurePlantsLoaded()) return;
+
+        const found = searchPlants(text);
+
+        if (!found.length) {
+          addBotMessage(
+            'Не нашёл растение с таким названием.<br>' +
+            'Попробуйте: яблоня, слива, укроп, огурец, клубника, виноград.'
+          );
+
+          setQuickReplies([
+            { label: '🌱 Подобрать растение', action: 'choose_plant' },
+            { label: '🏠 В начало', action: 'start' }
+          ]);
+
+          return;
+        }
+
+        if (found.length === 1) {
+          showPlantInfo(found[0]);
+          return;
+        }
+
+        addBotMessage(`Нашёл несколько растений: <strong>${found.length}</strong>.`);
+
+        addPlantButtons(found, 'info', 10);
+
+        setQuickReplies([
+          { label: '🏠 В начало', action: 'start' }
+        ]);
+      }
+
+      function ensurePlantsLoaded() {
+        if (plants.length) return true;
+
+        addBotMessage(
+          'База растений ещё не загружена.<br>' +
+          'Нажмите 📂 в шапке чата и выберите файл <strong>plants.json</strong>.'
+        );
+
+        return false;
+      }
+
+      function filterPlantsByType(type) {
+        if (!Array.isArray(plants)) return [];
+
+        if (!type || type === 'all') return plants;
+
+        const t = String(type).toLowerCase();
+
+        return plants.filter(plant => {
+          const plantType = String(plant.type || '').toLowerCase();
+
+          return plantType.includes(t);
+        });
+      }
+
+      function searchPlants(query) {
+        const q = String(query || '').toLowerCase();
+
+        return plants.filter(plant => {
+          const name = String(plant.name || '').toLowerCase();
+
+          return name.includes(q);
+        });
+      }
+
+      function getPlantByName(name) {
+        if (!name) return null;
+
+        const target = String(name).toLowerCase();
+
+        return (
+          plants.find(plant =>
+            String(plant.name || '').toLowerCase() === target
+          ) ||
+          plants.find(plant =>
+            String(plant.name || '').toLowerCase().includes(target)
+          )
+        );
+      }
+
+      function addPlantButtons(list, action, limit) {
+        const wrap = document.createElement('div');
+        wrap.className = 'sg-chat-plant-chips';
+
+        const visible = list.slice(0, limit || 10);
+
+        visible.forEach(plant => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'sg-chat-chip';
+          button.textContent = plant.name;
+          button.dataset.action = action;
+          button.dataset.value = plant.name;
+
+          wrap.appendChild(button);
+        });
+
+        if (list.length > (limit || 10)) {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'sg-chat-chip';
+          button.textContent = `Показать все (${list.length})`;
+          button.dataset.action = 'show_all';
+          button.dataset.value = action;
+
+          wrap.appendChild(button);
+        }
+
+        chatEls.messages.appendChild(wrap);
+        scrollMessages();
+      }
+
+      function addBotMessage(html) {
+        const div = document.createElement('div');
+        div.className = 'sg-chat-msg bot';
+        div.innerHTML = html;
+
+        chatEls.messages.appendChild(div);
+        scrollMessages();
+      }
+
+      function addUserMessage(text) {
+        const div = document.createElement('div');
+        div.className = 'sg-chat-msg user';
+        div.textContent = text;
+
+        chatEls.messages.appendChild(div);
+        scrollMessages();
+      }
+
+      function setQuickReplies(items) {
+        chatEls.quick.innerHTML = '';
+
+        items.forEach(item => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.textContent = item.label;
+          button.dataset.action = item.action;
+
+          if (item.value) {
+            button.dataset.value = item.value;
+          }
+
+          chatEls.quick.appendChild(button);
+        });
+      }
+
+      function scrollMessages() {
+        chatEls.messages.scrollTop = chatEls.messages.scrollHeight;
+      }
+
+      function careLine(label, value) {
+        if (!value) return '';
+
+        return `<strong>${label}:</strong> ${escapeHtml(value)}<br>`;
+      }
+
+      function generatePlantCalendar(plant) {
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        const tasks = [];
+        const seen = new Set();
+
+        function addMonthTask(month, title) {
+          if (!month || month < 1 || month > 12) return;
+
+          const date = dateFromMonth(month);
+
+          if (date < today) return;
+
+          const key = `${title}|${date.getFullYear()}-${date.getMonth()}`;
+
+          if (seen.has(key)) return;
+
+          seen.add(key);
+
+          tasks.push({
+            date,
+            title
+          });
+        }
+
+        const sowingMonths = extractMonths(plant.sowing_timing || '');
+        const harvestMonths = extractMonths(plant.harvest_timing || '');
+
+        sowingMonths.forEach(month => {
+          addMonthTask(month, `Посадка/посев: ${plant.name}`);
+        });
+
+        harvestMonths.forEach(month => {
+          addMonthTask(month, `Сбор урожая: ${plant.name}`);
+        });
+
+        const care = plant.care || {};
+
+        const fertilizer = String(care.fertilizer || '').toLowerCase();
+
+        if (fertilizer.includes('весна')) {
+          addMonthTask(4, `Весенняя подкормка: ${plant.name}`);
+        }
+
+        if (fertilizer.includes('лето')) {
+          addMonthTask(7, `Летняя подкормка: ${plant.name}`);
+        }
+
+        if (fertilizer.includes('осень')) {
+          addMonthTask(9, `Осенняя подкормка: ${plant.name}`);
+        }
+
+        if (care.pruning && String(care.pruning).toLowerCase() !== 'null') {
+          addMonthTask(3, `Обрезка/формировка: ${plant.name}`);
+        }
+
+        if (Array.isArray(plant.diseases) && plant.diseases.length) {
+          addMonthTask(5, `Профилактика болезней и вредителей: ${plant.name}`);
+        }
+
+        if (care.watering) {
+          const wateringDate = new Date(today);
+          wateringDate.setDate(wateringDate.getDate() + 7);
+
+          tasks.push({
+            date: wateringDate,
+            title: `Полив по графику: ${plant.name}`
+          });
+        }
+
+        return tasks
+          .sort((a, b) => a.date - b.date)
+          .slice(0, 20);
+      }
+
+      function dateFromMonth(month) {
+        const now = new Date();
+
+        const currentMonth = now.getMonth() + 1;
+        const currentDay = now.getDate();
+
+        let year = now.getFullYear();
+        let day = 1;
+
+        if (month < currentMonth) {
+          year++;
+        }
+
+        if (month === currentMonth) {
+          day = currentDay;
+        }
+
+        return new Date(year, month - 1, day);
+      }
+
+      function formatTaskDate(date) {
+        return `${MONTH_FULL[date.getMonth()]} ${date.getFullYear()}`;
+      }
+
+      function extractMonths(text) {
+        if (!text) return [];
+
+        const lower = String(text).toLowerCase();
+        const set = new Set();
+
+        const segments = lower.split(/[,;]|(?:\s+(?:или|и)\s+)/);
+
+        segments.forEach(segment => {
+          const allMonthMatches = segment.match(new RegExp(MONTH_RE_SRC, 'g')) || [];
+
+          allMonthMatches.forEach(word => {
+            const month = monthNumberFromWord(word);
+
+            if (month) {
+              set.add(month);
+            }
+          });
+
+          const rangeRe = new RegExp(
+            '(' + MONTH_RE_SRC + ')[^–-—]*?[–-—][^–-—]*?(' + MONTH_RE_SRC + ')',
+            'g'
+          );
+
+          let match;
+
+          while ((match = rangeRe.exec(segment)) !== null) {
+            const a = monthNumberFromWord(match[1]);
+            const b = monthNumberFromWord(match[2]);
+
+            if (a && b) {
+              fillRange(set, a, b);
+            }
+          }
+        });
+
+        return Array.from(set).sort((a, b) => a - b);
+      }
+
+      function fillRange(set, a, b) {
+        if (a <= b) {
+          for (let m = a; m <= b; m++) {
+            set.add(m);
+          }
+        } else {
+          for (let m = a; m <= 12; m++) {
+            set.add(m);
+          }
+
+          for (let m = 1; m <= b; m++) {
+            set.add(m);
+          }
+        }
+      }
+
+      function monthNumberFromWord(word) {
+        if (word.startsWith('январ')) return 1;
+        if (word.startsWith('феврал')) return 2;
+        if (word.startsWith('март')) return 3;
+        if (word.startsWith('апрел')) return 4;
+        if (word.startsWith('ма')) return 5;
+        if (word.startsWith('июн')) return 6;
+        if (word.startsWith('июл')) return 7;
+        if (word.startsWith('август')) return 8;
+        if (word.startsWith('сентябр')) return 9;
+        if (word.startsWith('октябр')) return 10;
+        if (word.startsWith('ноябр')) return 11;
+        if (word.startsWith('декабр')) return 12;
+
+        return null;
+      }
+
+      function normalizePlants(raw) {
+        const cleaned = deepTrim(raw);
+
+        let list = [];
+
+        if (Array.isArray(cleaned)) {
+          list = cleaned;
+        } else if (cleaned && typeof cleaned === 'object') {
+          list = cleaned.plants || cleaned['plants'] || [];
+        }
+
+        return list.filter(item => item && item.name);
+      }
+
+      function deepTrim(value) {
+        if (typeof value === 'string') {
+          return value.trim();
+        }
+
+        if (Array.isArray(value)) {
+          return value.map(deepTrim);
+        }
+
+        if (value && typeof value === 'object') {
+          const result = {};
+
+          Object.entries(value).forEach(([key, val]) => {
+            result[key.trim()] = deepTrim(val);
+          });
+
+          return result;
+        }
+
+        return value;
       }
     })();
   </script>
