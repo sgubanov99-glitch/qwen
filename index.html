@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@600;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@600;700&family=Neucha&display=swap"
     rel="stylesheet"
   />
 
@@ -74,46 +74,14 @@
       color: #2F4C33;
     }
 
-    /* Шапка */
-
-    .toolbar {
-      position: sticky;
-      top: 0;
-      z-index: 30;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 10px;
-      padding: 12px 16px;
-      background: rgba(255, 249, 238, 0.94);
-      backdrop-filter: blur(8px);
-      box-shadow: 0 8px 18px rgba(70, 60, 40, 0.08);
-    }
-
-    .toolbar label {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 14px;
-      font-weight: 600;
-      color: #4B4B4B;
-    }
-
-    .toolbar input,
-    .toolbar select {
-      width: 92px;
-    }
-
-    .toolbar-buttons {
-      margin-left: auto;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    /* Кнопки */
+    /* ============================== */
+    /* Кнопки: только вдавливание,    */
+    /* без пружинки и ряби            */
+    /* ============================== */
 
     button {
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
       font-family: "Montserrat", "Inter", sans-serif;
       font-weight: 700;
       font-size: 15px;
@@ -126,9 +94,9 @@
       box-shadow: var(--shadow);
       cursor: pointer;
       transition:
-        transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
-        box-shadow 0.18s ease,
-        filter 0.18s ease;
+        transform 0.12s ease,
+        box-shadow 0.12s ease,
+        filter 0.12s ease;
     }
 
     button:hover {
@@ -138,7 +106,9 @@
     }
 
     button:active {
-      transform: translateY(0) scale(0.98);
+      transform: translateY(2px) scale(0.96);
+      box-shadow: 0 4px 10px rgba(70, 60, 40, 0.15);
+      filter: saturate(1.1);
     }
 
     button:focus-visible,
@@ -177,6 +147,63 @@
       background: linear-gradient(180deg, #FFF7E8, #F6EBD2);
     }
 
+    /* ============================== */
+    /* Шапка: заголовок первой        */
+    /* строкой, меню и кнопки ниже    */
+    /* ============================== */
+
+    .toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 12px 16px;
+      background: rgba(255, 249, 238, 0.94);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 8px 18px rgba(70, 60, 40, 0.08);
+    }
+
+    .toolbar-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+
+    @media (min-width: 1024px) {
+      .toolbar-row {
+        flex-wrap: nowrap;
+      }
+    }
+
+    .toolbar label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: "Montserrat", "Inter", sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      color: #4B4B4B;
+      white-space: nowrap;
+    }
+
+    .toolbar input,
+    .toolbar select {
+      width: 92px;
+      font-family: "Montserrat", "Inter", sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+    }
+
+    .toolbar-buttons {
+      margin-left: auto;
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 8px;
+    }
+
     /* Поля ввода */
 
     input,
@@ -193,7 +220,9 @@
         0 6px 14px rgba(70, 60, 40, 0.08);
     }
 
-    /* Блок подсказок */
+    /* ============================== */
+    /* Блок подсказок с 4 шагами      */
+    /* ============================== */
 
     #hintBar {
       position: relative;
@@ -244,8 +273,6 @@
         inset 0 1px 0 rgba(255, 255, 255, 0.35),
         0 3px 8px rgba(70, 60, 40, 0.10);
     }
-
-    /* Подсказка снизу, светлая, только при наведении */
 
     .hint-pill::after {
       content: attr(data-tip);
@@ -331,7 +358,7 @@
     @media (min-width: 1024px) {
       .layout {
         grid-template-columns: 300px minmax(0, 1fr) 360px;
-        height: calc(100vh - 190px);
+        height: calc(100vh - 220px);
       }
     }
 
@@ -609,48 +636,6 @@
       opacity: 1;
     }
 
-    /* Диалог календаря */
-
-    dialog {
-      border: none;
-      border-radius: 28px;
-      padding: 18px;
-      width: min(760px, calc(100vw - 32px));
-      max-height: 80vh;
-      overflow: auto;
-      background: linear-gradient(180deg, #FFFFFF, #FFF9EE);
-      box-shadow: var(--shadow-hover);
-    }
-
-    dialog::backdrop {
-      background: rgba(60, 50, 30, 0.35);
-      backdrop-filter: blur(3px);
-    }
-
-    dialog[open] {
-      animation: stickerPop 0.28s ease;
-    }
-
-    .calendar-list {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .calendar-list li {
-      border-radius: var(--radius-card);
-      background: linear-gradient(180deg, #FFFDF6, #F5F7E6);
-      box-shadow: var(--shadow);
-      padding: 10px 12px;
-    }
-
-    .calendar-list small {
-      color: #6F8168;
-    }
-
     .muted {
       border-radius: var(--radius-card);
       background: #FFF8EC;
@@ -707,6 +692,102 @@
       z-index: 10;
     }
 
+    /* ============================== */
+    /* Окно «Календарь» с рисунком    */
+    /* ============================== */
+
+    .calendar-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 90;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(40, 35, 25, 0.45);
+      backdrop-filter: blur(3px);
+    }
+
+    .calendar-modal[hidden] {
+      display: none;
+    }
+
+    .calendar-stage {
+      position: relative;
+      width: min(96vw, calc(92vh * 1.75));
+      aspect-ratio: 1792 / 1024;
+    }
+
+    .calendar-stage img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 18px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+    }
+
+    .calendar-stage.no-image {
+      background:
+        linear-gradient(to right, rgba(70, 110, 80, 0.08) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(70, 110, 80, 0.08) 1px, transparent 1px),
+        #FFFDF6;
+      background-size: 40px 40px, 40px 40px, auto;
+      border-radius: 18px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+    }
+
+    .calendar-stage.no-image img {
+      display: none;
+    }
+
+    /* Текст задач на чистом листе */
+    .calendar-text {
+      position: absolute;
+      left: 33%;
+      top: 17%;
+      width: 37%;
+      height: 46%;
+      overflow: hidden;
+      padding: 1.5% 2.5%;
+      font-family: "Neucha", "Inter", sans-serif;
+      font-size: clamp(10px, 1.5vw, 17px);
+      line-height: 1.4;
+      color: #3B332A;
+    }
+
+    .cal-row {
+      margin-bottom: 0.4em;
+    }
+
+    .cal-date {
+      font-weight: 700;
+      color: #2F4C33;
+    }
+
+    /* Невидимые кнопки поверх нарисованных */
+    .cal-btn {
+      position: absolute;
+      width: 8.4%;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      border: none;
+      background: transparent;
+      box-shadow: none;
+      padding: 0;
+      cursor: pointer;
+    }
+
+    .cal-btn:active {
+      transform: scale(0.92);
+      background: rgba(255, 255, 255, 0.25);
+      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    .cal-btn-down  { left: 35.5%; top: 69.5%; }
+    .cal-btn-up    { left: 46.8%; top: 69.5%; }
+    .cal-btn-close { left: 58.1%; top: 69.5%; }
+
     /* Анимации */
 
     @keyframes stickerPop {
@@ -752,6 +833,7 @@
         width: 100%;
         margin-left: 0;
         justify-content: flex-start;
+        flex-wrap: wrap;
       }
 
       .canvas-wrap {
@@ -994,31 +1076,33 @@
   <header class="toolbar">
     <h1 class="app-title">🌱 Умный садовод</h1>
 
-    <label>
-      Ширина, м
-      <input id="plotWidth" type="number" min="1" max="500" step="0.5" />
-    </label>
+    <div class="toolbar-row">
+      <label>
+        Ширина, м
+        <input id="plotWidth" type="number" min="1" max="500" step="0.5" />
+      </label>
 
-    <label>
-      Длина, м
-      <input id="plotLength" type="number" min="1" max="500" step="0.5" />
-    </label>
+      <label>
+        Длина, м
+        <input id="plotLength" type="number" min="1" max="500" step="0.5" />
+      </label>
 
-    <label>
-      Сетка, м
-      <select id="gridStep">
-        <option value="0.1">0.1</option>
-        <option value="0.25">0.25</option>
-        <option value="0.5" selected>0.5</option>
-        <option value="1">1</option>
-      </select>
-    </label>
+      <label>
+        Сетка, м
+        <select id="gridStep">
+          <option value="0.1">0.1</option>
+          <option value="0.25">0.25</option>
+          <option value="0.5" selected>0.5</option>
+          <option value="1">1</option>
+        </select>
+      </label>
 
-    <div class="toolbar-buttons">
-      <button type="button" id="saveBtn">💾 Сохранить</button>
-      <button type="button" id="loadBtn">📂 Загрузить</button>
-      <button type="button" id="resetBtn">🧹 Сбросить</button>
-      <button type="button" id="generateBtn">🗓 Календарь</button>
+      <div class="toolbar-buttons">
+        <button type="button" id="saveBtn">💾 Сохранить</button>
+        <button type="button" id="loadBtn">📂 Загрузить</button>
+        <button type="button" id="resetBtn">🧹 Сбросить</button>
+        <button type="button" id="generateBtn">🗓 Календарь</button>
+      </div>
     </div>
   </header>
 
@@ -1105,15 +1189,6 @@
 
   </main>
 
-  <dialog id="calendarDialog">
-    <div class="panel-header">
-      <h2 class="section-title">🗓 Календарь работ</h2>
-      <button type="button" id="closeCalendarBtn" class="icon-btn" title="Закрыть календарь">✕</button>
-    </div>
-
-    <ol id="calendarList" class="calendar-list"></ol>
-  </dialog>
-
   <input
     type="file"
     id="fileInput"
@@ -1124,6 +1199,22 @@
   <button type="button" id="uiToggleBtn" class="ui-toggle-btn">
     🙈 Скрыть параметры
   </button>
+
+  <!-- ============================== -->
+  <!-- Окно «Календарь» с рисунком    -->
+  <!-- ============================== -->
+
+  <div id="calendarModal" class="calendar-modal" hidden>
+    <div class="calendar-stage" id="calendarStage">
+      <img id="calendarBg" src="calendar-bg.png" alt="" />
+
+      <div id="calendarText" class="calendar-text"></div>
+
+      <button type="button" id="btnCalDown" class="cal-btn cal-btn-down" aria-label="Прокрутить вниз"></button>
+      <button type="button" id="btnCalUp" class="cal-btn cal-btn-up" aria-label="Прокрутить вверх"></button>
+      <button type="button" id="btnCalClose" class="cal-btn cal-btn-close" aria-label="Закрыть календарь"></button>
+    </div>
+  </div>
 
   <!-- ============================== -->
   <!-- Чат-бот                        -->
@@ -1246,7 +1337,12 @@
       ready(function () {
         initApp();
         initChat();
+        initCalendarModal();
       });
+
+      /* ============================== */
+      /* Основной редактор              */
+      /* ============================== */
 
       function initApp() {
         els = {
@@ -1264,9 +1360,6 @@
           panel: document.getElementById('panel'),
           closePanelBtn: document.getElementById('closePanelBtn'),
           propertiesBody: document.getElementById('propertiesBody'),
-          calendarDialog: document.getElementById('calendarDialog'),
-          closeCalendarBtn: document.getElementById('closeCalendarBtn'),
-          calendarList: document.getElementById('calendarList'),
           fileInput: document.getElementById('fileInput'),
           hintBar: document.getElementById('hintBar'),
           closeHintBtn: document.getElementById('closeHintBtn'),
@@ -1327,7 +1420,7 @@
           showTemporaryStatus('План очищен. Нажмите «Загрузить», чтобы открыть файл.');
         });
 
-        on(els.generateBtn, 'click', generateAndShowCalendar);
+        on(els.generateBtn, 'click', openCalendarModal);
 
         on(els.fileInput, 'change', async () => {
           const file = els.fileInput.files && els.fileInput.files[0];
@@ -1342,12 +1435,6 @@
         on(els.closePanelBtn, 'click', () => {
           selectedId = null;
           renderAll();
-        });
-
-        on(els.closeCalendarBtn, 'click', () => {
-          if (els.calendarDialog && typeof els.calendarDialog.close === 'function') {
-            els.calendarDialog.close();
-          }
         });
 
         on(els.closeHintBtn, 'click', () => {
@@ -2019,7 +2106,53 @@
         );
       }
 
-      function generateAndShowCalendar() {
+      /* ============================== */
+      /* Окно «Календарь» с рисунком    */
+      /* ============================== */
+
+      let calEls = null;
+
+      function initCalendarModal() {
+        calEls = {
+          modal: document.getElementById('calendarModal'),
+          stage: document.getElementById('calendarStage'),
+          bg: document.getElementById('calendarBg'),
+          text: document.getElementById('calendarText'),
+          btnDown: document.getElementById('btnCalDown'),
+          btnUp: document.getElementById('btnCalUp'),
+          btnClose: document.getElementById('btnCalClose')
+        };
+
+        if (!calEls.modal) return;
+
+        calEls.bg.addEventListener('error', () => {
+          calEls.stage.classList.add('no-image');
+        });
+
+        on(calEls.btnDown, 'click', () => {
+          calEls.text.scrollBy({ top: 140, behavior: 'smooth' });
+        });
+
+        on(calEls.btnUp, 'click', () => {
+          calEls.text.scrollBy({ top: -140, behavior: 'smooth' });
+        });
+
+        on(calEls.btnClose, 'click', closeCalendarModal);
+
+        on(calEls.modal, 'pointerdown', (event) => {
+          if (event.target === calEls.modal) {
+            closeCalendarModal();
+          }
+        });
+
+        document.addEventListener('keydown', (event) => {
+          if (event.key === 'Escape' && !calEls.modal.hidden) {
+            closeCalendarModal();
+          }
+        });
+      }
+
+      function openCalendarModal() {
         const result = generateCalendar();
 
         if (result.errors.length) {
@@ -2028,26 +2161,27 @@
           return;
         }
 
+        renderCalendarText(result);
+
+        calEls.modal.hidden = false;
+      }
+
+      function closeCalendarModal() {
+        calEls.modal.hidden = true;
+      }
+
+      function renderCalendarText(result) {
         if (!result.tasks.length) {
-          els.calendarList.innerHTML = '<li>Нет будущих задач.</li>';
+          calEls.text.innerHTML = '<div class="cal-row">Нет будущих задач.</div>';
         } else {
-          els.calendarList.innerHTML = result.tasks.map(task => `
-            <li>
-              <strong>${formatDateRu(task.date)}</strong> — ${escapeHtml(task.title)}
-              <br />
-              <small>
-                ${escapeHtml(task.objectName)} • ${escapeHtml(task.culture)} •
-                ${task.mandatory ? 'обязательно' : 'рекомендуется'}
-              </small>
-            </li>
-          `).join('');
+          calEls.text.innerHTML = result.tasks
+            .map(task => {
+              return `<div class="cal-row"><span class="cal-date">${formatDateRu(task.date)}</span> — ${escapeHtml(task.title)}</div>`;
+            })
+            .join('');
         }
 
-        if (els.calendarDialog && typeof els.calendarDialog.showModal === 'function') {
-          els.calendarDialog.showModal();
-        } else {
-          alert('Календарь сформирован, но диалоговое окно недоступно в этом браузере.');
-        }
+        calEls.text.scrollTop = 0;
       }
 
       function generateCalendar() {
