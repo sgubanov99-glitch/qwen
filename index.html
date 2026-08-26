@@ -876,16 +876,42 @@
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+  /* ---------- Окно Советчика ---------- */
+
   .tip-bubble {
-    position: fixed; top: 64px; right: 18px; z-index: 50;
+    position: fixed;
+    top: 64px;
+    right: 18px;
+    z-index: 50;
     width: min(340px, calc(100vw - 36px));
     background: var(--panel);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     padding: 16px 18px;
+    padding-right: 44px; /* место под крестик */
     font-size: 14px;
     animation: pop 0.25s ease both;
   }
+
+  /* Крестик закрытия внутри окна Советчика */
+  .tip-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 26px;
+    height: 26px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(63, 62, 58, 0.08);
+    color: var(--ink);
+    font: 700 14px "Manrope", sans-serif;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    line-height: 1;
+    transition: background 0.15s ease;
+  }
+  .tip-close:hover { background: rgba(63, 62, 58, 0.16); }
 
   @media (max-width: 900px) {
     .cal-layout { grid-template-columns: 1fr; }
@@ -897,6 +923,16 @@
     .sprite-watering, .sprite-apples, .sprite-seedlings { width: 110px; }
     .card-chick .sprite { width: 56px; }
     .card-chick { top: -28px; }
+
+    /* На мобильных окно Советчика — снизу, над навигацией,
+       чтобы не перекрывать кнопку Советчик в шапке */
+    .tip-bubble {
+      top: auto;
+      bottom: 86px;
+      left: 12px;
+      right: 12px;
+      width: auto;
+    }
   }
 </style>
 </head>
@@ -1133,6 +1169,15 @@
       if (typeof ym === 'function') ym(COUNTER_ID, 'reachGoal', name);
     } catch (e) { /* молча игнорируем, чтобы не ломать UI */ }
   }
+
+  /* ---------- Закрытие окна Советчика по клику вне его ---------- */
+  document.addEventListener('pointerdown', (e) => {
+    const bubble = $('tipBubble');
+    if (!bubble.classList.contains('hidden')) {
+      const inside = e.target.closest('.tip-bubble') || e.target.closest('#advisorBtn');
+      if (!inside) bubble.classList.add('hidden');
+    }
+  });
 
   const EMOJI = {
     'Яблоня': '🍎', 'Слива': '🍑', 'Груша': '🍐', 'Вишня': '🍒', 'Черешня': '🍒',
@@ -2042,11 +2087,19 @@
     const har = PLANTS.filter(p => p.harvest.toLowerCase().includes(monthLow)).map(p => p.name);
 
     bubble.innerHTML = `
+      <button type="button" class="tip-close" id="tipClose" aria-label="Закрыть">✕</button>
       <strong style="font-family:'Neucha';font-size:19px">🐤 Советчик · ${MONTHS_NOM[now.getMonth()].toLowerCase()}</strong><br><br>
       <b>Сейчас можно посадить:</b> ${sow.slice(0, 5).join(', ') || '—'}.<br>
       <b>Пора собирать:</b> ${har.slice(0, 5).join(', ') || '—'}.<br><br>
       В засуху — полив и мульча! 🌿
     `;
+
+    /* Крестик закрытия внутри окна */
+    bubble.querySelector('#tipClose').addEventListener('click', (e) => {
+      e.stopPropagation();
+      bubble.classList.add('hidden');
+    });
+
     bubble.classList.remove('hidden');
   });
 
