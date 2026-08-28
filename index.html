@@ -888,12 +888,11 @@
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     padding: 16px 18px;
-    padding-right: 44px; /* место под крестик */
+    padding-right: 44px;
     font-size: 14px;
     animation: pop 0.25s ease both;
   }
 
-  /* Крестик закрытия внутри окна Советчика */
   .tip-close {
     position: absolute;
     top: 10px;
@@ -924,8 +923,6 @@
     .card-chick .sprite { width: 56px; }
     .card-chick { top: -28px; }
 
-    /* На мобильных окно Советчика — снизу, над навигацией,
-       чтобы не перекрывать кнопку Советчик в шапке */
     .tip-bubble {
       top: auto;
       bottom: 86px;
@@ -1185,9 +1182,16 @@
     'Ежевика': '🫐', 'Виноград': '🍇', 'Картофель': '🥔', 'Лук': '🧅', 'Чеснок': '🧄',
     'Укроп': '🌿', 'Редис': '🌰', 'Петрушка': '🌿', 'Салат': '🥬', 'Шпинат': '🥬',
     'Кинза': '🌿', 'Огурец': '🥒', 'Томат': '🍅', 'Перец': '🫑', 'Кабачок': '🥒',
-    'Тыква': '🎃', 'Патиссон': '🎃', 'Морковь': '🥕', 'Клубника': '🍓', 'Земляника садовая': '🍓'
+    'Тыква': '🎃', 'Патиссон': '🎃', 'Морковь': '🥕', 'Клубника': '🍓', 'Земляника садовая': '🍓',
+    'Ирга': '🍇', 'Голубика': '🫐', 'Облепиха': '🍊', 'Арония (черноплодная рябина)': '🫐',
+    'Барбарис': '🍒', 'Репа': '🍠', 'Баклажан': '🍆', 'Горох': '🫛', 'Фасоль': '🫘',
+    'Капуста': '🥬', 'Свёкла': '🟣', 'Дыня': '🍈', 'Арбуз': '🍉', 'Рукола': '🌿', 'Щавель': '🍃'
   };
 
+  /* Иконки культур из папки ikons/.
+     ВНИМАНИЕ: в части имён файлов есть пробел перед расширением
+     ("turnip .jpeg" и т.п.) — пути прописаны ТОЧНО как лежат файлы.
+     Если переименуете файлы (уберёте пробел) — уберите пробел и здесь. */
   const ICONS = {
     'Смородина': 'ikons/blackcurrant.jpeg',
     'Крыжовник': 'ikons/gooseberry.jpeg',
@@ -1196,7 +1200,22 @@
     'Ежевика':  'ikons/blackberry.jpeg',
     'Перец':    'ikons/pepper.jpeg',
     'Кабачок':  'ikons/zucchini.jpeg',
-    'Патиссон': 'ikons/pattypan.jpeg'
+    'Патиссон': 'ikons/pattypan.jpeg',
+    'Ирга':     'ikons/serviceberry.jpeg',
+    'Голубика': 'ikons/blueberry.jpeg',
+    'Облепиха': 'ikons/sea_buckthorn.jpeg',
+    'Арония (черноплодная рябина)': 'ikons/chokeberry.jpeg',
+    'Барбарис': 'ikons/barberry.jpeg',
+    'Репа':     'ikons/turnip.jpeg',
+    'Баклажан': 'ikons/eggplant.jpeg',
+    'Горох':    'ikons/peas.jpeg',
+    'Фасоль':   'ikons/beans.jpeg',
+    'Капуста':  'ikons/cabbage.jpeg',
+    'Свёкла':   'ikons/beetroot.jpeg',
+    'Дыня':     'ikons/melon.jpeg',
+    'Арбуз':    'ikons/watermelon.jpeg',
+    'Рукола':   'ikons/arugula.jpeg',
+    'Щавель':   'ikons/sorrel.jpeg'
   };
 
   const OBJ_TYPES = {
@@ -2094,7 +2113,6 @@
       В засуху — полив и мульча! 🌿
     `;
 
-    /* Крестик закрытия внутри окна */
     bubble.querySelector('#tipClose').addEventListener('click', (e) => {
       e.stopPropagation();
       bubble.classList.add('hidden');
