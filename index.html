@@ -182,6 +182,15 @@
     margin-right: auto;
   }
 
+  .version {
+    font: 700 12px "Manrope", sans-serif;
+    color: var(--ink-soft);
+    background: rgba(63, 62, 58, 0.08);
+    border-radius: 999px;
+    padding: 3px 10px;
+    align-self: center;
+  }
+
   .topbar-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 
   .btn {
@@ -811,7 +820,7 @@
   .cal-btn-up    { left: 46.8%; top: 69.5%; }
   .cal-btn-close { left: 58.1%; top: 69.5%; }
 
-  /* ---------- Модалка растения, тост, подсказка ---------- */
+  /* ---------- Модалки, тост, подсказка ---------- */
 
   .overlay {
     position: fixed; inset: 0; z-index: 60;
@@ -862,6 +871,17 @@
   }
   .modal-actions { display: flex; gap: 10px; margin-top: 16px; }
 
+  /* ---------- История ревизий ---------- */
+
+  .history-item {
+    border-left: 3px solid var(--olive);
+    padding: 6px 0 6px 12px;
+    margin: 12px 0;
+  }
+  .history-head { font-size: 14px; margin-bottom: 4px; }
+  .history-item ul { margin: 0; padding-left: 18px; }
+  .history-item li { font-size: 13px; color: var(--ink-soft); margin: 2px 0; }
+
   .toast {
     position: fixed; left: 50%; bottom: 96px;
     transform: translateX(-50%) translateY(10px);
@@ -890,6 +910,8 @@
     padding: 16px 18px;
     padding-right: 44px;
     font-size: 14px;
+    max-height: min(70vh, 480px);
+    overflow-y: auto;
     animation: pop 0.25s ease both;
   }
 
@@ -911,6 +933,9 @@
     transition: background 0.15s ease;
   }
   .tip-close:hover { background: rgba(63, 62, 58, 0.16); }
+
+  .tip-group { margin: 4px 0; }
+  .tip-count { color: var(--ink-soft); font-size: 12px; }
 
   @media (max-width: 900px) {
     .cal-layout { grid-template-columns: 1fr; }
@@ -936,13 +961,14 @@
 <body>
 
   <header class="topbar">
-    <div class="logo">🌱 Умный садовод</div>
+    <div class="logo">🌱 Умный садовод <span class="version" id="appVersion"></span></div>
 
     <div class="topbar-actions">
       <button type="button" class="btn btn-blue" id="saveBtn">💾 Сохранить</button>
       <button type="button" class="btn btn-green" id="loadBtn">📂 Загрузить</button>
       <button type="button" class="btn btn-pink" id="resetBtn">🧹 Сбросить</button>
       <button type="button" class="btn btn-olive" id="myCalBtn">🗓 Мой календарь</button>
+      <button type="button" class="btn" id="historyBtn" title="История ревизий">🕘 История</button>
       <button type="button" class="btn btn-olive advisor" id="advisorBtn">
         Советчик<span class="advisor-emoji">🐤</span>
       </button>
@@ -1149,6 +1175,11 @@
     <div class="modal" id="modal"></div>
   </div>
 
+  <!-- История ревизий -->
+  <div class="overlay hidden" id="historyOverlay">
+    <div class="modal" id="historyModal"></div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
   <input type="file" id="planFile" accept=".json,application/json" hidden />
@@ -1176,6 +1207,82 @@
     }
   });
 
+  /* ---------- История ревизий ----------
+     Правило: с каждой новой ревизией добавляем запись в начало
+     массива CHANGELOG и повышаем APP_VERSION. */
+  const APP_VERSION = '1.10';
+
+  const CHANGELOG = [
+    { v: '1.10', date: '01.09.2026', title: 'История ревизий в приложении', notes: [
+      'Кнопка «🕘 История» в шапке и окно со списком ревизий',
+      'Бейдж версии рядом с логотипом',
+      'Changelog встроен в код — работает через file:// без сервера'
+    ]},
+    { v: '1.9', date: '01.09.2026', title: 'Советчик: полные списки с группировкой', notes: [
+      'Убраны ограничения slice(0,5): Советчик показывает все культуры месяца',
+      'Группировка подсказок по типам: деревья / кустарники / овощи / зелень / ягоды',
+      'Окно Советчика прокручиваемое, со счётчиками «посадить / собрать»',
+      'Пути иконок ikons/ без пробелов (turnip.jpeg и т.д.)'
+    ]},
+    { v: '1.8', date: '08.2026', title: 'База расширена до 44 культур', notes: [
+      'Добавлены ирга, голубика, облепиха, арония, барбарис, репа, баклажан, горох, фасоль, капуста, свёкла, дыня, арбуз, рукола, щавель',
+      'Новые иконки в папке ikons/, запасные эмодзи в карточках и обзоре'
+    ]},
+    { v: '1.7', date: '08.2026', title: 'Мобильный Советчик', notes: [
+      'Крестик закрытия внутри окна, закрытие по клику вне',
+      'На мобильных окно перенесено вниз и не перекрывает кнопку'
+    ]},
+    { v: '1.6', date: '08.2026', title: 'Яндекс.Метрика', notes: [
+      'Счётчик 111974153, 12 целей на ключевые действия (save_plan, add_to_scheme и др.)'
+    ]},
+    { v: '1.5', date: '08.2026', title: 'Иконки культур', notes: [
+      '8 культур (смородина, крыжовник, малина и др.) отображаются иконками из ikons/ в карточках и модалках'
+    ]},
+    { v: '1.4', date: '08.2026', title: 'PNG-стикеры вместо эмодзи', notes: [
+      'Мальчик, кот, щенок, цыплёнок, лейка, корзина, ящик рассады — стикеры 180px с ореолами'
+    ]},
+    { v: '1.3', date: '08.2026', title: 'Настройки объектов и календарь из схемы', notes: [
+      'Дата посадки у грядок, 1–4 грядки у теплиц',
+      '«Мой календарь» и экран календаря считаются из культур на схеме, только текущий год, без дублей'
+    ]},
+    { v: '1.2', date: '08.2026', title: 'Шапка и подсказки', notes: [
+      'Заголовок отдельной строкой, кнопки Сохранить/Загрузить/Сбросить/Календарь в один ряд с меню участка',
+      'Подсказки «4 шага» с тултипами'
+    ]},
+    { v: '1.1', date: '08.2026', title: '«Мой календарь» на рисунке', notes: [
+      'Окно календаря на calendar-bg.png, кнопки ↓/↑/✕ поверх нарисованных'
+    ]},
+    { v: '1.0', date: '08.2026', title: 'Базовый прототип', notes: [
+      '4 экрана (Схема, Растения, Календарь, Обзор), нижняя навигация',
+      'Схема: drag&drop, проверка пересечений, сохранение/загрузка плана',
+      'Растения: загрузка plants.json, фильтры, карточки, модалки'
+    ]}
+  ];
+
+  function renderHistory() {
+    $('historyModal').innerHTML = `
+      <div class="modal-head">
+        <h2>🕘 История ревизий</h2>
+        <button type="button" class="m-close" id="historyClose">✕</button>
+      </div>
+      <p class="m-row">Текущая версия: <b>v${APP_VERSION}</b></p>
+      ${CHANGELOG.map(e => `
+        <div class="history-item">
+          <div class="history-head">v${e.v} · ${e.date} — <b>${e.title}</b></div>
+          <ul>${e.notes.map(n => `<li>${n}</li>`).join('')}</ul>
+        </div>
+      `).join('')}
+    `;
+    $('historyOverlay').classList.remove('hidden');
+    $('historyModal').querySelector('#historyClose')
+      .addEventListener('click', () => $('historyOverlay').classList.add('hidden'));
+  }
+
+  $('historyBtn').addEventListener('click', renderHistory);
+  $('historyOverlay').addEventListener('pointerdown', (e) => {
+    if (e.target === $('historyOverlay')) $('historyOverlay').classList.add('hidden');
+  });
+
   const EMOJI = {
     'Яблоня': '🍎', 'Слива': '🍑', 'Груша': '🍐', 'Вишня': '🍒', 'Черешня': '🍒',
     'Смородина': '🫐', 'Крыжовник': '🫐', 'Жимолость': '🫐', 'Малина': '🍓',
@@ -1188,10 +1295,7 @@
     'Капуста': '🥬', 'Свёкла': '🟣', 'Дыня': '🍈', 'Арбуз': '🍉', 'Рукола': '🌿', 'Щавель': '🍃'
   };
 
-  /* Иконки культур из папки ikons/.
-     ВНИМАНИЕ: в части имён файлов есть пробел перед расширением
-     ("turnip .jpeg" и т.п.) — пути прописаны ТОЧНО как лежат файлы.
-     Если переименуете файлы (уберёте пробел) — уберите пробел и здесь. */
+  /* Иконки культур из папки ikons/ (файлы переименованы, пробелов в именах нет) */
   const ICONS = {
     'Смородина': 'ikons/blackcurrant.jpeg',
     'Крыжовник': 'ikons/gooseberry.jpeg',
@@ -2066,10 +2170,33 @@
       closeModal();
       $('tipBubble').classList.add('hidden');
       $('calendarModal').classList.add('hidden');
+      $('historyOverlay').classList.add('hidden');
     }
   });
 
   /* ================= ОБЗОР ================= */
+
+  function groupNames(list) {
+    const groups = [
+      { key: 'дерево',    label: 'Деревья',    emoji: '🌳', items: [] },
+      { key: 'кустарник', label: 'Кустарники', emoji: '🌿', items: [] },
+      { key: 'овощ',      label: 'Овощи',      emoji: '🥕', items: [] },
+      { key: 'зелень',    label: 'Зелень',     emoji: '🌱', items: [] },
+      { key: 'ягода',     label: 'Ягоды',      emoji: '🍓', items: [] }
+    ];
+    list.forEach(p => {
+      const g = groups.find(g => p.type.includes(g.key));
+      if (g) g.items.push(p.name);
+    });
+    return groups.filter(g => g.items.length);
+  }
+
+  function renderGroups(groups) {
+    if (!groups.length) return '—';
+    return groups.map(g =>
+      `<div class="tip-group">${g.emoji} <b>${g.label}:</b> ${g.items.join(', ')}</div>`
+    ).join('');
+  }
 
   function renderHome() {
     $('homePlants').innerHTML = PLANTS.slice(0, 4).map(p =>
@@ -2083,9 +2210,9 @@
       : '<span class="mini-card">До конца года урожаев нет</span>';
 
     const monthLow = MONTHS_LOW[now.getMonth()];
-    const sow = PLANTS.filter(p => p.sowing.toLowerCase().includes(monthLow)).map(p => p.name);
+    const sow = PLANTS.filter(p => p.sowing.toLowerCase().includes(monthLow));
     $('homeTip').textContent = sow.length
-      ? `В этом месяце можно посеять: ${sow.slice(0, 4).join(', ')}.`
+      ? `В этом месяце можно посеять ${sow.length} культур: ${sow.map(p => p.name).join(', ')}.`
       : 'Загляните в советчик за подсказкой.';
 
     const count = scheme.objects.filter(o => ['bed', 'tree', 'bush', 'greenhouse'].includes(o.type)).length;
@@ -2102,14 +2229,17 @@
     reachGoal('open_advisor');
 
     const monthLow = MONTHS_LOW[now.getMonth()];
-    const sow = PLANTS.filter(p => p.sowing.toLowerCase().includes(monthLow)).map(p => p.name);
-    const har = PLANTS.filter(p => p.harvest.toLowerCase().includes(monthLow)).map(p => p.name);
+    const sowPlants = PLANTS.filter(p => p.sowing.toLowerCase().includes(monthLow));
+    const harPlants = PLANTS.filter(p => p.harvest.toLowerCase().includes(monthLow));
 
     bubble.innerHTML = `
       <button type="button" class="tip-close" id="tipClose" aria-label="Закрыть">✕</button>
-      <strong style="font-family:'Neucha';font-size:19px">🐤 Советчик · ${MONTHS_NOM[now.getMonth()].toLowerCase()}</strong><br><br>
-      <b>Сейчас можно посадить:</b> ${sow.slice(0, 5).join(', ') || '—'}.<br>
-      <b>Пора собирать:</b> ${har.slice(0, 5).join(', ') || '—'}.<br><br>
+      <strong style="font-family:'Neucha';font-size:19px">🐤 Советчик · ${MONTHS_NOM[now.getMonth()].toLowerCase()}</strong><br>
+      <span class="tip-count">посадить сейчас: ${sowPlants.length} · собрать: ${harPlants.length}</span><br><br>
+      <b>Сейчас можно посадить:</b>
+      ${renderGroups(groupNames(sowPlants))}<br>
+      <b>Пора собирать:</b>
+      ${renderGroups(groupNames(harPlants))}<br><br>
       В засуху — полив и мульча! 🌿
     `;
 
@@ -2125,6 +2255,7 @@
 
   /* ---------- старт ---------- */
 
+  $('appVersion').textContent = 'v' + APP_VERSION;
   renderPlot();
   loadPlants();
 </script>
