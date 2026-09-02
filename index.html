@@ -724,19 +724,20 @@
   });
 
   /* ---------- История ревизий ---------- */
-  const APP_VERSION = '1.17';
+  const APP_VERSION = '1.18';
   const CHANGELOG = [
+    { v: '1.18', date: '02.09.2026', title: 'Чат-бот «Помощь Садовода»', notes: [
+      'Встроенный чат-бот (bot.js): подбор культур для объекта и план посадки по схеме',
+      'Уникальные имена объектов: автогенерация, проверка при переименовании и загрузке плана',
+      'API window.SG для бота; применение плана только с подтверждением + Undo',
+      'Цели Метрики: bot_open, bot_recommend, bot_plan_build, bot_plan_apply'
+    ]},
     { v: '1.17', date: '02.09.2026', title: 'Восстановлена тень объектов (фикс o.h → o.l)', notes: [
-      'Причина бага: o.h = undefined → NaN в прямоугольнике тени → тень не рисовалась',
-      'Тень снова отбрасывается постройками, деревьями и кустарниками от дальней грани',
-      'Внутри объекта тень не считается; сетка видна под тенью'
+      'Тень от дальней грани; внутри объекта тень не считается; сетка видна под тенью'
     ]},
-    { v: '1.16', date: '02.09.2026', title: 'Исправлена отрисовка тени', notes: [
-      'Порядок слоёв: сетка → тень → красная обводка конфликтов',
-      'Тень усилена по прозрачности для читаемости'
-    ]},
-    { v: '1.15', date: '01.09.2026', title: 'Тень: дальняя граница, солнце 8 направлений', notes: ['Тень от дальней грани, солнце 8 направлений, маркер ☀️'] },
-    { v: '1.14', date: '01.09.2026', title: 'Учёт тени: геометрия + агросоветы', notes: ['height_m, тень, свет, light_requirements'] },
+    { v: '1.16', date: '02.09.2026', title: 'Исправлена отрисовка тени', notes: ['Порядок слоёв: сетка → тень → обводка конфликтов'] },
+    { v: '1.15', date: '01.09.2026', title: 'Тень: дальняя граница, солнце 8 направлений', notes: ['Маркер ☀️, пересчёт тени'] },
+    { v: '1.14', date: '01.09.2026', title: 'Учёт тени: геометрия + агросоветы', notes: ['height_m, свет, light_requirements'] },
     { v: '1.13', date: '01.09.2026', title: 'Совместимость для деревьев и кустарников', notes: ['Проверки для всех категорий'] },
     { v: '1.12', date: '01.09.2026', title: 'Проверка соседства при перетаскивании', notes: ['Предупреждения и рамка'] },
     { v: '1.11', date: '01.09.2026', title: 'Совместимость культур и севооборот', notes: ['compatibility.json, история посадок'] },
@@ -811,8 +812,6 @@
 
   const MONTHS_NOM = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
   const MONTHS_LOW = ['январ','феврал','март','апрел','ма','июн','июл','август','сентябр','октябр','ноябр','декабр'];
-
-  /* ---------- солнце и свет ---------- */
 
   const SUN = { altitudeDeg: 55 };
   const TAN_ALT = Math.tan(SUN.altitudeDeg * Math.PI / 180);
@@ -1117,7 +1116,7 @@
     }
   }
 
-  /* ---------- тень: расчёт и отрисовка ---------- */
+  /* ---------- тень ---------- */
 
   function inRect(mx, my, r) {
     return mx >= r.x0 && mx <= r.x1 && my >= r.y0 && my <= r.y1;
@@ -1127,12 +1126,10 @@
     const cell = 0.5;
     const cols = Math.max(1, Math.round(scheme.widthM / cell));
     const rows = Math.max(1, Math.round(scheme.lengthM / cell));
-    const levels = new Uint8Array(cols * rows); // 0 sun, 1 partial, 2 full
+    const levels = new Uint8Array(cols * rows);
     const casters = scheme.objects.filter(o => (o.height_m || 0) > 0);
     const [ux, uy] = shadowVector(scheme.sunDir || 'S');
 
-    /* Тень — прямоугольник от ДАЛЬНЕЙ относительно солнца границы;
-       след самого объекта тенью НЕ считается. */
     const shadows = casters.map(o => {
       const L = (o.height_m || 0) / TAN_ALT;
       return {
@@ -1141,7 +1138,7 @@
           x0: o.x + (ux < 0 ? -L : 0),
           x1: o.x + o.w + (ux > 0 ? L : 0),
           y0: o.y + (uy < 0 ? -L : 0),
-          y1: o.y + o.l + (uy > 0 ? L : 0)   // ИСПРАВЛЕНО v1.17: было o.h (undefined → NaN)
+          y1: o.y + o.l + (uy > 0 ? L : 0)   // v1.17: o.l (не o.h)
         }
       };
     });
@@ -1171,7 +1168,6 @@
 
     const px = g.cell * ppm;
 
-    /* 1) СЕТКА — нижний слой */
     ctx.strokeStyle = 'rgba(70, 110, 80, 0.18)';
     ctx.lineWidth = 1;
     const stepPx = scheme.gridStepM * ppm;
@@ -1182,7 +1178,6 @@
       ctx.beginPath(); ctx.moveTo(0, y + 0.5); ctx.lineTo(cv.width, y + 0.5); ctx.stroke();
     }
 
-    /* 2) ТЕНЬ — поверх сетки */
     const colors = ['rgba(120,170,90,0.10)', 'rgba(245,200,60,0.42)', 'rgba(55,55,55,0.55)'];
     for (let r = 0; r < g.rows; r++) {
       for (let c = 0; c < g.cols; c++) {
@@ -1193,7 +1188,6 @@
       }
     }
 
-    /* 3) КРАСНАЯ ОБВОДКА конфликтов света */
     scheme.objects.forEach(o => {
       if (!cropEntries(o).length) return;
       if (lightMismatch(o)) {
@@ -1450,13 +1444,21 @@
     btn.addEventListener('click', () => { addObject(btn.dataset.add); reachGoal('add_object'); });
   });
 
+  /* v1.18: уникальные имена объектов */
+  function nextUniqueName(type) {
+    const label = OBJ_TYPES[type].label;
+    const used = new Set(scheme.objects.map(o => norm(o.name)));
+    let n = 1;
+    while (used.has(norm(`${label} ${n}`))) n++;
+    return `${label} ${n}`;
+  }
+
   function addObject(type, name, culture) {
     const t = OBJ_TYPES[type];
     if (!t) return null;
-    const count = scheme.objects.filter(o => o.type === type).length + 1;
     const obj = {
       id: scheme.nextId++, type,
-      name: name || `${t.label} ${count}`,
+      name: name || nextUniqueName(type),
       culture: culture || null,
       w: Math.min(t.w, scheme.widthM), l: Math.min(t.l, scheme.lengthM),
       x: 0, y: 0
@@ -1542,7 +1544,7 @@
     renderObjList();
   }
 
-  /* ---------- подсказка по тени при наведении ---------- */
+  /* ---------- подсказка по тени ---------- */
 
   plotBox.addEventListener('mousemove', (e) => {
     if (!shadeGrid) return;
@@ -1719,9 +1721,20 @@
     renderPlot();
   });
 
-  $('opName').addEventListener('input', () => {
+  /* v1.18: переименование с проверкой уникальности */
+  $('opName').addEventListener('change', () => {
     const obj = scheme.objects.find(o => o.id === selectedObjId);
-    if (obj) { obj.name = $('opName').value; renderPlot(false); }
+    if (!obj) return;
+    const v = $('opName').value.trim();
+    if (!v) { $('opName').value = obj.name; return; }
+    if (scheme.objects.some(o => o.id !== obj.id && norm(o.name) === norm(v))) {
+      showToast('Имя занято — выберите другое');
+      $('opName').value = obj.name;
+      return;
+    }
+    obj.name = v;
+    renderPlot(false);
+    renderObjList();
   });
 
   ['opX', 'opY', 'opW', 'opL'].forEach(id => {
@@ -1866,6 +1879,15 @@
         }
         return obj;
       });
+
+      /* v1.18: защита от дубликатов имён при загрузке */
+      const seenNames = new Set();
+      scheme.objects.forEach(o => {
+        const base = o.name; let n = 2;
+        while (seenNames.has(norm(o.name))) o.name = `${base} ${n++}`;
+        seenNames.add(norm(o.name));
+      });
+
       $('plotW').value = scheme.widthM; $('plotL').value = scheme.lengthM;
       $('gridStep').value = String(scheme.gridStepM);
       selectedObjId = null;
@@ -2208,6 +2230,39 @@
   });
   $('homeTipBtn').addEventListener('click', () => $('advisorBtn').click());
 
+  /* ---------- API для чат-бота (v1.18) ---------- */
+  window.SG = {
+    get objects() { return scheme.objects; },
+    get plants() { return PLANTS; },
+    get types() { return OBJ_TYPES; },
+    get plot() { return { widthM: scheme.widthM, lengthM: scheme.lengthM, gridStepM: scheme.gridStepM }; },
+    levelAtRect: (rect) => dominantLightLevel(rect),
+    neighborsOf: (obj, bedIndex) => collectNeighborCultures(obj, bedIndex),
+    historyLast: (obj, bedIndex) => lastHistoryCulture(obj, bedIndex),
+    lightReq: (culture) => getLightReq(culture),
+    findRule: (c1, c2) => findRule(c1, c2),
+    findRotation: (p, n) => findRotation(p, n),
+    assignCulture: (objId, bedIndex, culture) => {
+      const obj = scheme.objects.find(o => o.id === objId);
+      if (!obj) return false;
+      commitCulture(obj, bedIndex, culture);
+      return true;
+    },
+    createObjectAt: (type, x, y) => {
+      const obj = addObject(type);
+      if (!obj) return null;
+      obj.x = clampNum(x, 0, Math.max(0, scheme.widthM - obj.w));
+      obj.y = clampNum(y, 0, Math.max(0, scheme.lengthM - obj.l));
+      renderPlot(false);
+      return obj;
+    },
+    snapshot: () => JSON.parse(JSON.stringify(scheme.objects)),
+    restore: (snap) => { scheme.objects = snap; selectedObjId = null; renderPlot(); },
+    refresh: () => renderPlot(),
+    selectAndShow: (objId) => { selectedObjId = objId; showScreen('screen-scheme'); renderPlot(); },
+    reachGoal: (g) => reachGoal(g)
+  };
+
   /* ---------- старт ---------- */
 
   $('appVersion').textContent = 'v' + APP_VERSION;
@@ -2215,5 +2270,8 @@
   renderPlot();
   loadPlants();
 </script>
+
+<!-- v1.18: чат-бот «Помощь Садовода» (файл лежит рядом с index.html) -->
+<script src="bot.js"></script>
 </body>
 </html>
