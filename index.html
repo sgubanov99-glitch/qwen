@@ -229,28 +229,40 @@
 
   .plot-wrap {
     background: linear-gradient(135deg, #F5FBEC, #EDF7DD);
-    border-radius: var(--radius); box-shadow: var(--shadow-s); padding: 16px; overflow: auto;
+    border-radius: var(--radius); box-shadow: var(--shadow-s); padding: 28px 16px 16px; overflow: auto;
   }
+  #plotBox { position: relative; margin: auto; }
   .plot {
-    position: relative; margin: auto; background: #fff; border-radius: 14px;
+    position: relative; width: 100%; height: 100%;
+    background: #fff; border-radius: 14px;
     box-shadow: inset 0 0 0 1px rgba(120, 160, 120, 0.15);
-    background-image:
-      linear-gradient(to right, rgba(70, 110, 80, 0.07) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(70, 110, 80, 0.07) 1px, transparent 1px);
     touch-action: none;
   }
+  #shadeCanvas { position: absolute; left: 0; top: 0; z-index: 3; pointer-events: none; border-radius: 14px; }
+  #sunMarker {
+    position: absolute; z-index: 4; pointer-events: none;
+    font-size: 24px; line-height: 1;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
+  }
+
+  #shadeTip {
+    position: fixed; z-index: 65; pointer-events: none;
+    background: rgba(255, 253, 247, 0.97);
+    border: 1px solid rgba(121, 96, 62, 0.14);
+    box-shadow: var(--shadow-s); border-radius: 10px;
+    padding: 8px 10px; font-size: 12.5px; color: var(--ink); max-width: 250px;
+  }
+
   .obj {
-    position: absolute; display: grid; place-items: center;
+    position: absolute; display: grid; place-items: center; z-index: 2;
     border: 2px solid rgba(63, 62, 58, 0.15); border-radius: 12px;
     cursor: grab; user-select: none; touch-action: none;
   }
   .obj:active { cursor: grabbing; }
   .obj.selected { outline: 3px solid rgba(138, 155, 110, 0.5); }
   .obj.invalid { border-color: var(--rose-dark); background: rgba(217, 165, 160, 0.2) !important; }
-  .obj.conflict {
-    border-color: var(--rose-dark);
-    box-shadow: 0 0 0 3px rgba(217, 165, 160, 0.4);
-  }
+  .obj.conflict { border-color: var(--rose-dark); box-shadow: 0 0 0 3px rgba(217, 165, 160, 0.4); }
+  .obj.lightwarn { border-color: #E53935; box-shadow: 0 0 0 3px rgba(229, 57, 53, 0.35); }
   .o-building { background: linear-gradient(180deg, #FFF7EF, #F9E8D4); border-color: #D9B48F; }
   .o-greenhouse { background: linear-gradient(180deg, #F3FFF5, #DCF2E0); border-color: #9CCFA8; }
   .o-bed { background: linear-gradient(180deg, #F9FFE9, #E5F7CF); border-color: #B0D37E; }
@@ -515,6 +527,18 @@
           <option value="1">1</option>
         </select>
       </label>
+      <label>Солнце
+        <select id="sunDir">
+          <option value="N">Север</option>
+          <option value="NW">Северо-Запад</option>
+          <option value="W">Запад</option>
+          <option value="SW">Юго-Запад</option>
+          <option value="S" selected>Юг</option>
+          <option value="SE">Юго-Восток</option>
+          <option value="E">Восток</option>
+          <option value="NE">Северо-Восток</option>
+        </select>
+      </label>
       <div class="palette">
         <button type="button" class="pal-btn" data-add="building">🏠 Постройка</button>
         <button type="button" class="pal-btn" data-add="greenhouse">🌱 Теплица</button>
@@ -524,7 +548,13 @@
       </div>
     </div>
 
-    <div class="plot-wrap"><div class="plot" id="plot"></div></div>
+    <div class="plot-wrap">
+      <div id="plotBox">
+        <div class="plot" id="plot"></div>
+        <canvas id="shadeCanvas"></canvas>
+        <div id="sunMarker">☀️</div>
+      </div>
+    </div>
 
     <div class="obj-panel hidden" id="objPanel">
       <div class="op-grid">
@@ -533,8 +563,15 @@
         <label>Y, м <input id="opY" type="number" step="0.1" /></label>
         <label>Ширина, м <input id="opW" type="number" step="0.1" min="0.3" /></label>
         <label>Длина, м <input id="opL" type="number" step="0.1" min="0.3" /></label>
+        <label id="opHeightWrap">Высота, м
+          <input id="opHeight" type="number" min="0.5" max="15" step="0.5" list="heightList" />
+        </label>
         <label id="opCultureWrap">Культура <select id="opCulture"></select></label>
       </div>
+      <datalist id="heightList">
+        <option value="1.5"></option><option value="2"></option><option value="2.5"></option>
+        <option value="3"></option><option value="4"></option><option value="5"></option><option value="6"></option>
+      </datalist>
       <div class="op-extra hidden" id="opExtra"></div>
       <div class="op-footer">
         <span class="obj-info" id="objInfo"></span>
@@ -554,7 +591,7 @@
     <div class="hero">
       <div>
         <h2 class="screen-title" style="margin:0">Что посадим <span class="accent">в этом сезоне?</span></h2>
-        <p>Подбор растений для Подмосковья из базы plants.json: сроки посадки и урожая, уход и болезни.</p>
+        <p>Подбор растений для Подмосковья из базы plants.json: сроки посадки и урожая, уход, болезни и требования к свету.</p>
       </div>
       <div class="hero-stickers">
         <span class="sticker glow"><img src="stickers/boy.png" class="sprite sprite-boy" alt="Мальчик-садовод" /></span>
@@ -657,6 +694,7 @@
   </div>
 
   <div class="tip-bubble hidden" id="tipBubble"></div>
+  <div id="shadeTip" class="hidden"></div>
 
   <div class="overlay hidden" id="overlay"><div class="modal" id="modal"></div></div>
   <div class="overlay hidden" id="historyOverlay"><div class="modal" id="historyModal"></div></div>
@@ -686,33 +724,33 @@
   });
 
   /* ---------- История ревизий ---------- */
-  const APP_VERSION = '1.13';
+  const APP_VERSION = '1.17';
   const CHANGELOG = [
-    { v: '1.13', date: '01.09.2026', title: 'Совместимость для деревьев и кустарников', notes: [
-      'Проверка соседства теперь для всех категорий: грядки, теплицы, деревья, кустарники',
-      'Перетаскивание кустарника/дерева к конфликтной культуре — предупреждение (малина/клубника и т.п.)',
-      'Розовая рамка конфликта — на всех растительных объектах',
-      'Подсказки соседей в панели настроек дерева/кустарника',
-      '«На схему» проверяет совместимость и для деревьев/кустарников'
+    { v: '1.17', date: '02.09.2026', title: 'Восстановлена тень объектов (фикс o.h → o.l)', notes: [
+      'Причина бага: o.h = undefined → NaN в прямоугольнике тени → тень не рисовалась',
+      'Тень снова отбрасывается постройками, деревьями и кустарниками от дальней грани',
+      'Внутри объекта тень не считается; сетка видна под тенью'
     ]},
-    { v: '1.12', date: '01.09.2026', title: 'Проверка соседства при перетаскивании', notes: [
-      'Предупреждение о плохом соседстве после перетаскивания, «Всё равно оставить» / «Вернуть»',
-      'Постоянная розовая подсветка конфликтующих объектов'
+    { v: '1.16', date: '02.09.2026', title: 'Исправлена отрисовка тени', notes: [
+      'Порядок слоёв: сетка → тень → красная обводка конфликтов',
+      'Тень усилена по прозрачности для читаемости'
     ]},
-    { v: '1.11', date: '01.09.2026', title: 'Совместимость культур и севооборот', notes: [
-      'compatibility.json, проверка соседей 2 м, история посадок, севооборот'
-    ]},
-    { v: '1.10', date: '01.09.2026', title: 'История ревизий в приложении', notes: ['Кнопка «🕘 История», бейдж версии'] },
-    { v: '1.9', date: '01.09.2026', title: 'Советчик: полные списки с группировкой', notes: ['Все культуры месяца, группировка, прокрутка'] },
+    { v: '1.15', date: '01.09.2026', title: 'Тень: дальняя граница, солнце 8 направлений', notes: ['Тень от дальней грани, солнце 8 направлений, маркер ☀️'] },
+    { v: '1.14', date: '01.09.2026', title: 'Учёт тени: геометрия + агросоветы', notes: ['height_m, тень, свет, light_requirements'] },
+    { v: '1.13', date: '01.09.2026', title: 'Совместимость для деревьев и кустарников', notes: ['Проверки для всех категорий'] },
+    { v: '1.12', date: '01.09.2026', title: 'Проверка соседства при перетаскивании', notes: ['Предупреждения и рамка'] },
+    { v: '1.11', date: '01.09.2026', title: 'Совместимость культур и севооборот', notes: ['compatibility.json, история посадок'] },
+    { v: '1.10', date: '01.09.2026', title: 'История ревизий в приложении', notes: ['Кнопка «🕘 История»'] },
+    { v: '1.9', date: '01.09.2026', title: 'Советчик: полные списки с группировкой', notes: ['Группировка по типам'] },
     { v: '1.8', date: '08.2026', title: 'База расширена до 44 культур', notes: ['Новые культуры и иконки'] },
-    { v: '1.7', date: '08.2026', title: 'Мобильный Советчик', notes: ['Крестик, клик вне, окно снизу'] },
-    { v: '1.6', date: '08.2026', title: 'Яндекс.Метрика', notes: ['Счётчик и 12 целей'] },
-    { v: '1.5', date: '08.2026', title: 'Иконки культур', notes: ['Иконки из ikons/'] },
+    { v: '1.7', date: '08.2026', title: 'Мобильный Советчик', notes: ['Окно снизу'] },
+    { v: '1.6', date: '08.2026', title: 'Яндекс.Метрика', notes: ['Счётчик и цели'] },
+    { v: '1.5', date: '08.2026', title: 'Иконки культур', notes: ['ikons/'] },
     { v: '1.4', date: '08.2026', title: 'PNG-стикеры вместо эмодзи', notes: ['Стикеры 180px'] },
-    { v: '1.3', date: '08.2026', title: 'Настройки объектов и календарь из схемы', notes: ['Дата посадки, 1–4 грядки, календарь из схемы'] },
-    { v: '1.2', date: '08.2026', title: 'Шапка и подсказки', notes: ['Заголовок отдельной строкой, подсказки «4 шага»'] },
-    { v: '1.1', date: '08.2026', title: '«Мой календарь» на рисунке', notes: ['Окно на calendar-bg.png'] },
-    { v: '1.0', date: '08.2026', title: 'Базовый прототип', notes: ['4 экрана, схема, plants.json'] }
+    { v: '1.3', date: '08.2026', title: 'Настройки объектов и календарь из схемы', notes: ['Даты посадки, грядки теплиц'] },
+    { v: '1.2', date: '08.2026', title: 'Шапка и подсказки', notes: ['4 шага'] },
+    { v: '1.1', date: '08.2026', title: '«Мой календарь» на рисунке', notes: ['calendar-bg.png'] },
+    { v: '1.0', date: '08.2026', title: 'Базовый прототип', notes: ['4 экрана'] }
   ];
 
   function renderHistory() {
@@ -764,15 +802,126 @@
   };
 
   const OBJ_TYPES = {
-    building: { label: 'Постройка', emoji: '🏠', w: 3, l: 4 },
-    greenhouse: { label: 'Теплица', emoji: '🌱', w: 3, l: 6 },
+    building: { label: 'Постройка', emoji: '🏠', w: 3, l: 4, h: 4 },
+    greenhouse: { label: 'Теплица', emoji: '🌱', w: 3, l: 6, h: 2.5 },
     bed: { label: 'Грядка', emoji: '🥕', w: 1, l: 3 },
-    tree: { label: 'Дерево', emoji: '🌳', w: 2, l: 2 },
-    bush: { label: 'Кустарник', emoji: '🌵', w: 1, l: 1 }
+    tree: { label: 'Дерево', emoji: '🌳', w: 2, l: 2, h: 3 },
+    bush: { label: 'Кустарник', emoji: '🌵', w: 1, l: 1, h: 1.5 }
   };
 
   const MONTHS_NOM = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
   const MONTHS_LOW = ['январ','феврал','март','апрел','ма','июн','июл','август','сентябр','октябр','ноябр','декабр'];
+
+  /* ---------- солнце и свет ---------- */
+
+  const SUN = { altitudeDeg: 55 };
+  const TAN_ALT = Math.tan(SUN.altitudeDeg * Math.PI / 180);
+
+  function shadowVector(dir) {
+    switch (dir) {
+      case 'N':  return [0, 1];
+      case 'NE': return [-1, 1];
+      case 'E':  return [-1, 0];
+      case 'SE': return [-1, -1];
+      case 'S':  return [0, -1];
+      case 'SW': return [1, -1];
+      case 'W':  return [1, 0];
+      case 'NW': return [1, 1];
+      default:   return [0, -1];
+    }
+  }
+
+  const SUN_MARKER_POS = {
+    N:  { left: '50%',  top: '0%',   transform: 'translate(-50%, -130%)' },
+    S:  { left: '50%',  top: '100%', transform: 'translate(-50%, 15%)' },
+    E:  { left: '100%', top: '50%',  transform: 'translate(15%, -50%)' },
+    W:  { left: '0%',   top: '50%',  transform: 'translate(-115%, -50%)' },
+    NE: { left: '100%', top: '0%',   transform: 'translate(15%, -115%)' },
+    NW: { left: '0%',   top: '0%',   transform: 'translate(-115%, -115%)' },
+    SE: { left: '100%', top: '100%', transform: 'translate(15%, 15%)' },
+    SW: { left: '0%',   top: '100%', transform: 'translate(-115%, 15%)' }
+  };
+
+  const LEVEL_NAMES = { full_sun: 'полное солнце', partial_shade: 'полутень', full_shade: 'тень' };
+
+  const LIGHT_REQ_DEFAULT = {
+    'Томат': ['full_sun'], 'Перец': ['full_sun'], 'Баклажан': ['full_sun'],
+    'Дыня': ['full_sun'], 'Арбуз': ['full_sun'], 'Тыква': ['full_sun'],
+    'Кабачок': ['full_sun'], 'Патиссон': ['full_sun'],
+    'Огурец': ['full_sun', 'partial_shade'],
+    'Картофель': ['full_sun'], 'Лук': ['full_sun'], 'Чеснок': ['full_sun'],
+    'Горох': ['full_sun'], 'Фасоль': ['full_sun'],
+    'Яблоня': ['full_sun'], 'Груша': ['full_sun'], 'Вишня': ['full_sun'],
+    'Черешня': ['full_sun'], 'Слива': ['full_sun'], 'Виноград': ['full_sun'],
+    'Облепиха': ['full_sun'],
+    'Арония (черноплодная рябина)': ['full_sun', 'partial_shade'],
+    'Барбарис': ['full_sun', 'partial_shade'], 'Ирга': ['full_sun', 'partial_shade'],
+    'Голубика': ['full_sun', 'partial_shade'],
+    'Морковь': ['full_sun', 'partial_shade'], 'Свёкла': ['full_sun', 'partial_shade'],
+    'Репа': ['full_sun', 'partial_shade'], 'Редис': ['full_sun', 'partial_shade'],
+    'Капуста': ['full_sun', 'partial_shade'],
+    'Клубника': ['full_sun', 'partial_shade'], 'Земляника садовая': ['full_sun', 'partial_shade'],
+    'Смородина': ['full_sun', 'partial_shade'], 'Крыжовник': ['full_sun', 'partial_shade'],
+    'Жимолость': ['full_sun', 'partial_shade'], 'Малина': ['full_sun', 'partial_shade'],
+    'Ежевика': ['full_sun', 'partial_shade'],
+    'Салат': ['full_sun', 'partial_shade'], 'Шпинат': ['full_sun', 'partial_shade'],
+    'Рукола': ['full_sun', 'partial_shade'], 'Петрушка': ['full_sun', 'partial_shade'],
+    'Кинза': ['full_sun', 'partial_shade'], 'Укроп': ['full_sun', 'partial_shade'],
+    'Щавель': ['partial_shade', 'full_sun']
+  };
+
+  let PLANTS = [];
+  const scheme = { widthM: 12, lengthM: 8, gridStepM: 0.5, sunDir: 'S', objects: [], nextId: 1 };
+
+  let ppm = 30;
+  let drag = null;
+  let selectedObjId = null;
+  let shadeGrid = null;
+
+  const now = new Date();
+  let selectedDay = now.getDate();
+
+  /* ---------- утилиты ---------- */
+
+  const toast = $('toast');
+  let toastTimer = null;
+  function showToast(text) {
+    toast.textContent = text;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 2600);
+  }
+
+  function toDateStr(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+  function addDays(isoDate, days) {
+    const date = new Date(`${isoDate}T00:00:00`);
+    date.setDate(date.getDate() + days);
+    return toDateStr(date);
+  }
+  function formatDateRu(isoDate) {
+    if (!isoDate) return '';
+    const [y, m, d] = isoDate.split('-');
+    return `${d}.${m}.${y}`;
+  }
+  function clampNum(v, min, max) { return Math.min(max, Math.max(min, v)); }
+  function norm(s) { return String(s || '').toLowerCase().trim(); }
+
+  function getLightReq(culture) {
+    const p = PLANTS.find(x => norm(x.name) === norm(culture));
+    if (p && Array.isArray(p.light_requirements) && p.light_requirements.length) return p.light_requirements;
+    return LIGHT_REQ_DEFAULT[culture] || ['full_sun', 'partial_shade'];
+  }
+
+  function suitableForLevel(level) {
+    return PLANTS
+      .filter(p => /овощ|зелень|ягода/.test(p.type) && getLightReq(p.name).includes(level))
+      .map(p => p.name);
+  }
 
   /* ---------- совместимость ---------- */
   const COMPAT_DEFAULT = {
@@ -883,47 +1032,7 @@
     }
   }
 
-  let PLANTS = [];
-  const scheme = { widthM: 12, lengthM: 8, gridStepM: 0.5, objects: [], nextId: 1 };
-
-  let ppm = 30;
-  let drag = null;
-  let selectedObjId = null;
-
-  const now = new Date();
-  let selectedDay = now.getDate();
-
-  /* ---------- утилиты ---------- */
-
-  const toast = $('toast');
-  let toastTimer = null;
-  function showToast(text) {
-    toast.textContent = text;
-    toast.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toast.classList.remove('show'), 2600);
-  }
-
-  function toDateStr(date) {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const d = String(date.getDate()).padStart(2, '0');
-    return `${y}-${m}-${d}`;
-  }
-  function addDays(isoDate, days) {
-    const date = new Date(`${isoDate}T00:00:00`);
-    date.setDate(date.getDate() + days);
-    return toDateStr(date);
-  }
-  function formatDateRu(isoDate) {
-    if (!isoDate) return '';
-    const [y, m, d] = isoDate.split('-');
-    return `${d}.${m}.${y}`;
-  }
-  function clampNum(v, min, max) { return Math.min(max, Math.max(min, v)); }
-  function norm(s) { return String(s || '').toLowerCase().trim(); }
-
-  /* ---------- совместимость: логика ---------- */
+  /* ---------- утилиты совместимости ---------- */
 
   function matchCrop(entry, crop) {
     const e = norm(entry), c = norm(crop);
@@ -949,7 +1058,6 @@
     return Math.hypot(dx, dy);
   }
 
-  /* Культуры объекта: грядка, теплица (по грядкам), дерево, кустарник */
   function cropEntries(obj) {
     if (obj.type === 'bed') return obj.culture ? [{ culture: obj.culture, bedIndex: null }] : [];
     if (obj.type === 'greenhouse') {
@@ -963,7 +1071,6 @@
     return [];
   }
 
-  /* Соседи в радиусе 2 м: учитываются ВСЕ растительные категории */
   function collectNeighborCultures(obj, bedIndex) {
     const out = [];
     const R = 2;
@@ -1010,14 +1117,150 @@
     }
   }
 
+  /* ---------- тень: расчёт и отрисовка ---------- */
+
+  function inRect(mx, my, r) {
+    return mx >= r.x0 && mx <= r.x1 && my >= r.y0 && my <= r.y1;
+  }
+
+  function computeShade() {
+    const cell = 0.5;
+    const cols = Math.max(1, Math.round(scheme.widthM / cell));
+    const rows = Math.max(1, Math.round(scheme.lengthM / cell));
+    const levels = new Uint8Array(cols * rows); // 0 sun, 1 partial, 2 full
+    const casters = scheme.objects.filter(o => (o.height_m || 0) > 0);
+    const [ux, uy] = shadowVector(scheme.sunDir || 'S');
+
+    /* Тень — прямоугольник от ДАЛЬНЕЙ относительно солнца границы;
+       след самого объекта тенью НЕ считается. */
+    const shadows = casters.map(o => {
+      const L = (o.height_m || 0) / TAN_ALT;
+      return {
+        foot: { x0: o.x, x1: o.x + o.w, y0: o.y, y1: o.y + o.l },
+        shade: {
+          x0: o.x + (ux < 0 ? -L : 0),
+          x1: o.x + o.w + (ux > 0 ? L : 0),
+          y0: o.y + (uy < 0 ? -L : 0),
+          y1: o.y + o.l + (uy > 0 ? L : 0)   // ИСПРАВЛЕНО v1.17: было o.h (undefined → NaN)
+        }
+      };
+    });
+
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const mx = (c + 0.5) * cell;
+        const my = (r + 0.5) * cell;
+        let cnt = 0;
+        for (const s of shadows) {
+          if (inRect(mx, my, s.shade) && !inRect(mx, my, s.foot)) cnt += 1;
+        }
+        levels[r * cols + c] = cnt >= 2 ? 2 : cnt === 1 ? 1 : 0;
+      }
+    }
+    shadeGrid = { cell, cols, rows, levels };
+  }
+
+  function drawShade() {
+    const cv = $('shadeCanvas');
+    if (!cv || !shadeGrid) return;
+    const g = shadeGrid;
+    cv.width = Math.round(scheme.widthM * ppm);
+    cv.height = Math.round(scheme.lengthM * ppm);
+    const ctx = cv.getContext('2d');
+    ctx.clearRect(0, 0, cv.width, cv.height);
+
+    const px = g.cell * ppm;
+
+    /* 1) СЕТКА — нижний слой */
+    ctx.strokeStyle = 'rgba(70, 110, 80, 0.18)';
+    ctx.lineWidth = 1;
+    const stepPx = scheme.gridStepM * ppm;
+    for (let x = stepPx; x < cv.width; x += stepPx) {
+      ctx.beginPath(); ctx.moveTo(x + 0.5, 0); ctx.lineTo(x + 0.5, cv.height); ctx.stroke();
+    }
+    for (let y = stepPx; y < cv.height; y += stepPx) {
+      ctx.beginPath(); ctx.moveTo(0, y + 0.5); ctx.lineTo(cv.width, y + 0.5); ctx.stroke();
+    }
+
+    /* 2) ТЕНЬ — поверх сетки */
+    const colors = ['rgba(120,170,90,0.10)', 'rgba(245,200,60,0.42)', 'rgba(55,55,55,0.55)'];
+    for (let r = 0; r < g.rows; r++) {
+      for (let c = 0; c < g.cols; c++) {
+        const lvl = g.levels[r * g.cols + c];
+        if (lvl === 0) continue;
+        ctx.fillStyle = colors[lvl];
+        ctx.fillRect(c * px, r * px, px, px);
+      }
+    }
+
+    /* 3) КРАСНАЯ ОБВОДКА конфликтов света */
+    scheme.objects.forEach(o => {
+      if (!cropEntries(o).length) return;
+      if (lightMismatch(o)) {
+        ctx.strokeStyle = 'rgba(229,57,53,0.85)';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(o.x * ppm + 1, o.y * ppm + 1, o.w * ppm - 2, o.l * ppm - 2);
+      }
+    });
+  }
+
+  function positionSunMarker() {
+    const m = $('sunMarker');
+    const pos = SUN_MARKER_POS[scheme.sunDir || 'S'] || SUN_MARKER_POS.S;
+    m.style.left = pos.left;
+    m.style.top = pos.top;
+    m.style.transform = pos.transform;
+  }
+
+  function levelAt(mx, my) {
+    const g = shadeGrid;
+    if (!g) return 'full_sun';
+    const c = Math.floor(mx / g.cell), r = Math.floor(my / g.cell);
+    if (c < 0 || r < 0 || c >= g.cols || r >= g.rows) return 'full_sun';
+    return ['full_sun', 'partial_shade', 'full_shade'][g.levels[r * g.cols + c]];
+  }
+
+  function dominantLightLevel(rect) {
+    const g = shadeGrid;
+    if (!g) return 'full_sun';
+    const counts = [0, 0, 0];
+    for (let my = rect.y + g.cell / 2; my < rect.y + rect.l; my += g.cell) {
+      for (let mx = rect.x + g.cell / 2; mx < rect.x + rect.w; mx += g.cell) {
+        const c = Math.floor(mx / g.cell), r = Math.floor(my / g.cell);
+        if (c >= 0 && r >= 0 && c < g.cols && r < g.rows) counts[g.levels[r * g.cols + c]]++;
+      }
+    }
+    const idx = counts.indexOf(Math.max(...counts));
+    return ['full_sun', 'partial_shade', 'full_shade'][idx];
+  }
+
+  function lightMismatch(obj) {
+    return cropEntries(obj).some(ce => !getLightReq(ce.culture).includes(dominantLightLevel(obj)));
+  }
+
+  function lightWarningText(culture, level) {
+    const req = getLightReq(culture).map(r => LEVEL_NAMES[r]).join(' или ');
+    const suit = suitableForLevel(level).slice(0, 5).join(', ');
+    return `«${culture}» требует ${req}, а здесь «${LEVEL_NAMES[level]}». Слабая завязь и низкий урожай. Подойдут: ${suit || '—'}`;
+  }
+
+  /* ---------- оценка размещения ---------- */
+
   function evaluatePlacement(obj, culture, bedIndex) {
     const bad = [], good = [];
+
     collectNeighborCultures(obj, bedIndex).forEach(nc => {
       const rule = findRule(culture, nc.culture);
       if (!rule) return;
       if (rule.relation === 'bad') bad.push({ kind: 'neighbor', text: `«${nc.culture}» рядом (${nc.where}): ${rule.reason}` });
       else good.push({ kind: 'neighbor', text: `«${nc.culture}» рядом — ${rule.reason}` });
     });
+
+    const level = dominantLightLevel(obj);
+    if (!getLightReq(culture).includes(level)) {
+      bad.push({ kind: 'light', text: lightWarningText(culture, level) });
+    }
+
     const prev = lastHistoryCulture(obj, bedIndex);
     if (prev) {
       if (norm(prev) === norm(culture)) {
@@ -1056,7 +1299,6 @@
 
   function commitCulture(obj, bedIndex, next) {
     const prev = bedIndex == null ? obj.culture : (obj.greenhouseBedCultures || [])[bedIndex];
-    /* история севооборота — только для грядок и теплиц */
     if (prev && prev !== next && (obj.type === 'bed' || obj.type === 'greenhouse')) pushHistory(obj, bedIndex, prev);
     if (bedIndex == null) obj.culture = next;
     else obj.greenhouseBedCultures[bedIndex] = next;
@@ -1071,11 +1313,11 @@
 
   function openCompatConfirm(bad, onOk, onCancel) {
     $('compatModal').innerHTML = `
-      <div class="modal-head"><h2>⚠️ Конфликт соседства</h2>
+      <div class="modal-head"><h2>⚠️ Проверка посадки</h2>
         <button type="button" class="m-close" id="compatClose">✕</button></div>
-      <p class="m-row">Обнаружены проблемы совместимости:</p>
+      <p class="m-row">Обнаружены проблемы:</p>
       <ul class="compat-list">
-        ${bad.map(b => `<li><b>${b.kind === 'rotation' ? 'Севооборот' : 'Соседство'}:</b> ${b.text}</li>`).join('')}
+        ${bad.map(b => `<li><b>${b.kind === 'rotation' ? 'Севооборот' : b.kind === 'light' ? 'Свет' : 'Соседство'}:</b> ${b.text}</li>`).join('')}
       </ul>
       <div class="modal-actions">
         <button type="button" class="btn btn-pink" id="compatCancel">Отмена</button>
@@ -1096,7 +1338,7 @@
     if (!el) return;
     const culture = bedIndex == null ? obj.culture : (obj.greenhouseBedCultures || [])[bedIndex];
     if (!culture) {
-      el.innerHTML = '<span>Выберите культуру — подскажем соседей и севооборот.</span>';
+      el.innerHTML = '<span>Выберите культуру — подскажем соседей, свет и севооборот.</span>';
       return;
     }
     const goodN = [], badN = [];
@@ -1106,6 +1348,8 @@
       else if (matchCrop(r.crop_b, culture)) partner = r.crop_a;
       if (partner) (r.relation === 'good' ? goodN : badN).push(partner);
     });
+    const level = dominantLightLevel(obj);
+    const lightLine = `<div><span class="cg">Свет в зоне:</span> ${LEVEL_NAMES[level]}. <span class="cg">Требования культуры:</span> ${getLightReq(culture).map(l => LEVEL_NAMES[l]).join(', ')}</div>`;
     const prev = lastHistoryCulture(obj, bedIndex);
     let rot = '';
     if (prev && (obj.type === 'bed' || obj.type === 'greenhouse')) {
@@ -1120,26 +1364,11 @@
         (badR.length ? `<span class="cb">Не сажайте: ${badR.join(', ')}.</span>` : '') + '</div>';
     }
     el.innerHTML = `
+      ${lightLine}
       <div><span class="cg">Хорошие соседи:</span> ${goodN.join(', ') || '—'}</div>
       <div><span class="cb">Плохие соседи:</span> ${badN.join(', ') || '—'}</div>
       ${rot}`;
   }
-
-  /* ---------- навигация ---------- */
-
-  function showScreen(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s.id === id));
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.goto === id));
-    window.scrollTo(0, 0);
-    if (id === 'screen-calendar') { selectedDay = now.getDate(); renderCalendarScreen(); }
-    if (id === 'screen-home') renderHome();
-    if (id === 'screen-scheme') renderPlot();
-  }
-
-  document.addEventListener('click', (e) => {
-    const go = e.target.closest('[data-goto]');
-    if (go) showScreen(go.dataset.goto);
-  });
 
   /* ---------- plants.json ---------- */
 
@@ -1161,7 +1390,8 @@
       id: 'p' + i, name: p.name, type: p.type || '',
       emoji: EMOJI[p.name] || '🌿',
       sowing: p.sowing_timing || '', harvest: p.harvest_timing || '',
-      care: p.care || {}, diseases: p.diseases || []
+      care: p.care || {}, diseases: p.diseases || [],
+      light_requirements: Array.isArray(p.light_requirements) ? p.light_requirements : null
     }));
     $('plantsFallback').classList.add('hidden');
     renderCards(currentFilter);
@@ -1189,13 +1419,31 @@
     $('plantsFile').value = '';
   });
 
+  /* ---------- навигация ---------- */
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s.id === id));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.goto === id));
+    window.scrollTo(0, 0);
+    if (id === 'screen-calendar') { selectedDay = now.getDate(); renderCalendarScreen(); }
+    if (id === 'screen-home') renderHome();
+    if (id === 'screen-scheme') renderPlot();
+  }
+
+  document.addEventListener('click', (e) => {
+    const go = e.target.closest('[data-goto]');
+    if (go) showScreen(go.dataset.goto);
+  });
+
   /* ================= СХЕМА ================= */
 
   const plotEl = $('plot');
+  const plotBox = $('plotBox');
 
   $('plotW').addEventListener('change', () => { scheme.widthM = clampNum(Number($('plotW').value) || 12, 4, 60); clampObjects(); renderPlot(); });
   $('plotL').addEventListener('change', () => { scheme.lengthM = clampNum(Number($('plotL').value) || 8, 4, 60); clampObjects(); renderPlot(); });
   $('gridStep').addEventListener('change', () => { scheme.gridStepM = Number($('gridStep').value) || 0.5; renderPlot(); });
+  $('sunDir').addEventListener('change', () => { scheme.sunDir = $('sunDir').value || 'S'; renderPlot(); });
   $('closeHintBtn').addEventListener('click', () => $('hintBar').remove());
 
   document.querySelectorAll('.pal-btn').forEach(btn => {
@@ -1213,6 +1461,7 @@
       w: Math.min(t.w, scheme.widthM), l: Math.min(t.l, scheme.lengthM),
       x: 0, y: 0
     };
+    if (t.h) obj.height_m = t.h;
     if (type === 'bed') obj.plantingDate = null;
     if (type === 'greenhouse') {
       obj.greenhouseBedCount = 2;
@@ -1245,7 +1494,7 @@
     return !scheme.objects.some(o =>
       o.id !== obj.id &&
       obj.x < o.x + o.w && obj.x + obj.w > o.x &&
-      obj.y < o.y + o.l && obj.y + obj.l > o.y);
+      obj.y < o.y + o.l && obj.y + o.l > o.y);
   }
 
   function clampObjects() {
@@ -1257,12 +1506,14 @@
   }
 
   function renderPlot(withPanel = true) {
-    const wrap = plotEl.parentElement;
+    const wrap = plotBox.parentElement;
     const avail = Math.max(120, wrap.clientWidth - 40);
     ppm = Math.max(14, Math.min(avail / scheme.widthM, 420 / scheme.lengthM));
-    plotEl.style.width = `${scheme.widthM * ppm}px`;
-    plotEl.style.height = `${scheme.lengthM * ppm}px`;
-    plotEl.style.backgroundSize = `${scheme.gridStepM * ppm}px ${scheme.gridStepM * ppm}px`;
+
+    const W = Math.round(scheme.widthM * ppm), H = Math.round(scheme.lengthM * ppm);
+    plotBox.style.width = W + 'px';
+    plotBox.style.height = H + 'px';
+
     plotEl.innerHTML = scheme.objects.map(o => `
       <div class="obj o-${o.type} ${o.id === selectedObjId ? 'selected' : ''}"
            data-id="${o.id}" title="${o.name}${o.culture ? ' • ' + o.culture : ''}"
@@ -1270,20 +1521,55 @@
         ${OBJ_TYPES[o.type].emoji}
       </div>`).join('');
 
-    /* постоянная подсветка конфликтов соседства — для всех растительных объектов */
+    computeShade();
+    drawShade();
+    positionSunMarker();
+
     scheme.objects.forEach(o => {
+      const el = plotEl.querySelector(`.obj[data-id="${o.id}"]`);
+      if (!el) return;
       if (cropEntries(o).length && hasNeighborConflict(o)) {
-        const el = plotEl.querySelector(`.obj[data-id="${o.id}"]`);
-        if (el) {
-          el.classList.add('conflict');
-          el.title = (el.title || '') + ' • ⚠️ конфликт соседства';
-        }
+        el.classList.add('conflict');
+        el.title = (el.title || '') + ' • ⚠️ конфликт соседства';
+      }
+      if (cropEntries(o).length && lightMismatch(o)) {
+        el.classList.add('lightwarn');
+        el.title = (el.title || '') + ' • ⚠️ мало солнца';
       }
     });
 
     if (withPanel) renderObjPanel();
     renderObjList();
   }
+
+  /* ---------- подсказка по тени при наведении ---------- */
+
+  plotBox.addEventListener('mousemove', (e) => {
+    if (!shadeGrid) return;
+    const rect = plotEl.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) / ppm;
+    const my = (e.clientY - rect.top) / ppm;
+    const tip = $('shadeTip');
+    if (mx < 0 || my < 0 || mx > scheme.widthM || my > scheme.lengthM) { tip.classList.add('hidden'); return; }
+
+    const overBuilding = scheme.objects.some(o =>
+      o.type === 'building' && mx >= o.x && mx <= o.x + o.w && my >= o.y && my <= o.y + o.l);
+    if (overBuilding) { tip.classList.add('hidden'); return; }
+
+    const level = levelAt(mx, my);
+    const suit = suitableForLevel(level).slice(0, 5).join(', ');
+    tip.innerHTML = level === 'full_sun'
+      ? `<b>Полное солнце.</b> Подойдёт большинству культур.`
+      : level === 'partial_shade'
+        ? `<b>Полутень:</b> подойдут ${suit || 'шпинат, рукола, редис'}.`
+        : `<b>Тень:</b> подойдут ${suit || 'щавель, петрушка'}.`;
+    tip.style.left = (e.clientX + 14) + 'px';
+    tip.style.top = (e.clientY + 14) + 'px';
+    tip.classList.remove('hidden');
+  });
+  plotBox.addEventListener('mouseleave', () => $('shadeTip').classList.add('hidden'));
+
+  /* ---------- панель настроек ---------- */
 
   function culturesFor(type) {
     if (type === 'tree') return PLANTS.filter(p => p.type.includes('дерево'));
@@ -1316,7 +1602,12 @@
     $('opName').value = obj.name;
     $('opX').value = obj.x; $('opY').value = obj.y;
     $('opW').value = obj.w; $('opL').value = obj.l;
-    $('objInfo').textContent = `${OBJ_TYPES[obj.type].label} · ${obj.w}×${obj.l} м`;
+    $('objInfo').textContent = `${OBJ_TYPES[obj.type].label} · ${obj.w}×${obj.l} м` +
+      (obj.height_m ? ` · h ${obj.height_m} м` : '');
+
+    const isCaster = ['building', 'greenhouse', 'tree', 'bush'].includes(obj.type);
+    $('opHeightWrap').classList.toggle('hidden', !isCaster);
+    if (isCaster) $('opHeight').value = obj.height_m || OBJ_TYPES[obj.type].h || 2;
 
     const isPlant = ['bed', 'tree', 'bush'].includes(obj.type);
     $('opCultureWrap').classList.toggle('hidden', !isPlant);
@@ -1392,7 +1683,6 @@
       updateCompatHint(obj, 0);
 
     } else if (obj.type === 'tree' || obj.type === 'bush') {
-      /* подсказки соседей для деревьев и кустарников */
       extra.classList.remove('hidden');
       extra.innerHTML = `<div id="compatHint" class="compat-hint" style="grid-column:1/-1"></div>`;
       updateCompatHint(obj, null);
@@ -1402,6 +1692,13 @@
       extra.innerHTML = '';
     }
   }
+
+  $('opHeight').addEventListener('change', () => {
+    const obj = scheme.objects.find(o => o.id === selectedObjId);
+    if (!obj) return;
+    obj.height_m = clampNum(Number($('opHeight').value) || OBJ_TYPES[obj.type].h || 2, 0.5, 15);
+    renderPlot();
+  });
 
   function renderObjList() {
     $('objList').innerHTML = scheme.objects.map(o => {
@@ -1506,17 +1803,12 @@
       obj.x = drag.lastX; obj.y = drag.lastY;
       showToast('Так нельзя: пересечение или край участка');
     } else if (obj && moved && cropEntries(obj).length) {
-      /* проверка соседства после перетаскивания — для всех категорий */
       const res = evaluateNeighbors(obj);
       if (res.bad.length) {
         const backX = drag.origX, backY = drag.origY;
         openCompatConfirm(res.bad,
           () => showToast('Оставлено как есть'),
-          () => {
-            obj.x = backX; obj.y = backY;
-            renderPlot(false);
-            showToast('Объект возвращён на прежнее место');
-          });
+          () => { obj.x = backX; obj.y = backY; renderPlot(false); showToast('Объект возвращён на прежнее место'); });
       } else if (res.good.length) {
         goodToast(res);
       }
@@ -1530,7 +1822,7 @@
 
   $('saveBtn').addEventListener('click', () => {
     const json = JSON.stringify({
-      plot: { widthM: scheme.widthM, lengthM: scheme.lengthM, gridStepM: scheme.gridStepM },
+      plot: { widthM: scheme.widthM, lengthM: scheme.lengthM, gridStepM: scheme.gridStepM, sunDir: scheme.sunDir },
       objects: scheme.objects
     }, null, 2);
     const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
@@ -1552,6 +1844,8 @@
       scheme.widthM = clampNum(parsed.plot.widthM || 12, 4, 60);
       scheme.lengthM = clampNum(parsed.plot.lengthM || 8, 4, 60);
       scheme.gridStepM = Number(parsed.plot.gridStepM) || 0.5;
+      scheme.sunDir = parsed.plot.sunDir || 'S';
+      $('sunDir').value = scheme.sunDir;
       scheme.objects = parsed.objects.filter(o => OBJ_TYPES[o.type]).map(o => {
         const obj = {
           id: scheme.nextId++, type: o.type,
@@ -1562,6 +1856,7 @@
           x: clampNum(Number(o.x) || 0, 0, scheme.widthM),
           y: clampNum(Number(o.y) || 0, 0, scheme.lengthM)
         };
+        if (OBJ_TYPES[o.type].h) obj.height_m = clampNum(Number(o.height_m) || OBJ_TYPES[o.type].h, 0.5, 15);
         if (o.type === 'bed') { obj.plantingDate = o.plantingDate || null; obj.history = Array.isArray(o.history) ? o.history : []; }
         if (o.type === 'greenhouse') {
           obj.greenhouseBedCount = clampNum(Number(o.greenhouseBedCount) || 1, 1, 4);
@@ -1787,7 +2082,6 @@
     const obj = addObject(type, plant.name, null);
     if (!obj) return;
 
-    /* проверка совместимости для всех категорий */
     const res = evaluatePlacement(obj, plant.name, null);
     if (res.bad.length) {
       openCompatConfirm(res.bad,
@@ -1813,6 +2107,7 @@
   function openModal(id) {
     const p = PLANTS.find(x => x.id === id);
     if (!p) return;
+    const req = getLightReq(p.name).map(l => LEVEL_NAMES[l]).join(', ');
     modal.innerHTML = `
       <div class="modal-head">
         ${ICONS[p.name] ? `<img src="${ICONS[p.name]}" class="m-icon" alt="${p.name}">` : `<span class="m-emoji">${p.emoji}</span>`}
@@ -1822,6 +2117,7 @@
       <span class="m-type">${p.type} · Подмосковье</span>
       <p class="m-row"><b>Посадка:</b> ${p.sowing}</p>
       <p class="m-row"><b>Урожай:</b> ${p.harvest}</p>
+      <p class="m-row"><b>Свет:</b> ${req}</p>
       <div class="m-section">Уход</div>
       <ul class="care-list">
         <li>💧 <b>Полив:</b> ${p.care.watering || '—'}</li>
@@ -1847,6 +2143,7 @@
     if (e.key === 'Escape') {
       closeModal();
       $('tipBubble').classList.add('hidden');
+      $('shadeTip').classList.add('hidden');
       $('calendarModal').classList.add('hidden');
       $('historyOverlay').classList.add('hidden');
       $('compatOverlay').classList.add('hidden');
